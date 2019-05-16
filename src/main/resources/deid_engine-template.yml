@@ -1,0 +1,16 @@
+spring:
+  main:
+    web-application-type: none
+  datasource:
+    url: jdbc:postgresql://URL:PORTNUMBER/DB_NAME
+    username: INPUT_HERE
+    password: INPUT_HERE
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 60000
+      maximum-pool-size: 20
+
+deid_engine:
+  salt_manager:
+    cache_size: 50000
+    salt_changing_interval: 30000 # ms, 30 seconds

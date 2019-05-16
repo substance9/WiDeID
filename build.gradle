@@ -1,0 +1,58 @@
+plugins {
+	id 'org.springframework.boot' version '2.1.4.RELEASE'
+	id 'java'
+}
+
+apply plugin: 'io.spring.dependency-management'
+
+group = 'edu.uci.ics'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+assemble {
+    manifest {
+        attributes 'Implementation-Title': 'Wi-Fi Connectivity Data De-identification', 'Implementation-Version': version
+    }
+
+    doLast {
+        mkdir 'target'
+        copy {
+            from 'build/libs'
+            into 'target'
+        }
+    }
+}
+
+repositories {
+	mavenCentral()
+}
+
+test {
+    useJUnitPlatform()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'net.sourceforge.argparse4j:argparse4j:0.8.1'
+	implementation 'com.google.guava:guava:25.1-jre'
+    implementation "org.springframework:spring-jdbc"
+
+	implementation "org.zeromq:jeromq:0.5.1"
+	implementation "com.fasterxml.jackson.core:jackson-databind:2.9.8"
+
+	implementation "org.postgresql:postgresql:42.2.5"
+	implementation "com.zaxxer:HikariCP:3.1.0"
+
+	//legacy
+	implementation "javax.xml.bind:jaxb-api:2.3.0"
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation "org.junit.jupiter:junit-jupiter-api:5.3.2"
+    testRuntime "org.junit.jupiter:junit-jupiter-engine:5.3.2" 
+	testImplementation "org.junit.jupiter:junit-jupiter-params:5.3.2"
+}
+
+springBoot {
+	mainClassName = 'edu.uci.ics.deid.bootloader.Main'
+}
+

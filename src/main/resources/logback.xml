@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <property resource="log.properties"/>
+
+    <appender name="FILE" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <discriminator>
+            <key>logFileName</key>
+            <defaultValue>head0</defaultValue>
+        </discriminator>
+
+        <sift>
+
+            <appender name="FILE-${logFileName}" class="ch.qos.logback.core.rolling.RollingFileAppender">
+                <!-- <file>${app.logPathPrefix}/deid.%d{yyyy-MM-dd}.%i.log</file> -->
+                <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                    <fileNamePattern>${app.logPathPrefix}/deid.${logFileName}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+                    <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                        <maxFileSize>500MB</maxFileSize>
+                    </timeBasedFileNamingAndTriggeringPolicy>
+                    <maxHistory>14</maxHistory>
+                </rollingPolicy>
+
+                <encoder>
+                    <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%level] [%thread] [%logger:%line] %msg%n
+                    </pattern>
+                </encoder>
+            </appender>
+        </sift>
+
+    </appender>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%level] [%thread] [%logger:%line] %msg%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="FILE" />
+    </appender>
+
+
+    <logger name="org.springframework" >
+        <level value="INFO"/>
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="ASYNC" />
+    </logger>
+    <logger name="edu.uci.ics.deid.service.devicefilter" >
+        <level value="DEBUG"/>
+        <appender-ref ref="ASYNC" />
+        <appender-ref ref="STDOUT" />
+    </logger>
+    <logger name="edu.uci.ics.deid.service.deidengine" >
+        <level value="DEBUG"/>
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="ASYNC" />
+    </logger>
+    <logger name="edu.uci.ics.deid.controller" >
+        <level value="DEBUG"/>
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="ASYNC" />
+    </logger>
+
+
+    <!-- FIXME : FILE appender does not save DEBUG information-->
+    <root>
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="ASYNC" />
+    </root>
+
+</configuration>

@@ -1,0 +1,18 @@
+main_db:
+  host: localhost
+  port: 5432
+
+log_db:
+  host: localhost
+  port: 5432
+
+deid_engine:
+  host: localhost
+  port: 10000
+
+dispatcher:
+  host: localhost
+  port: 10010
+
+
+
