@@ -11,7 +11,7 @@ public class AuthorizedUserMapper implements RowMapper
 {
     public Object mapRow(ResultSet rs, int rowNum) throws SQLException {
         AuthorizedUser aUser = new AuthorizedUser();
-        aUser.setUciNetId(rs.getString("ucinetid"));
+        aUser.setUcinetid(rs.getString("ucinetid"));
         aUser.setName(rs.getString("name"));
         return aUser;
     }

@@ -2,21 +2,22 @@ package edu.uci.ics.deid.model.entity;
 
 
 public class AuthorizedUser {
-    private String uciNetId;
+    private String ucinetid;
     private String name;
+    private String department;
 
     /**
-     * @return the uciNetId
+     * @return the ucinetid
      */
-    public String getUciNetId() {
-        return uciNetId;
+    public String getUcinetid() {
+        return ucinetid;
     }
 
     /**
-     * @param uciNetId the uciNetId to set
+     * @param ucinetid the ucinetid to set
      */
-    public void setUciNetId(String uciNetId) {
-        this.uciNetId = uciNetId;
+    public void setUcinetid(String ucinetid) {
+        this.ucinetid = ucinetid;
     }
 
     /**
@@ -33,5 +34,18 @@ public class AuthorizedUser {
         this.name = name;
     }
 
-    
+    /**
+     * @return the department
+     */
+    public String getDepartment() {
+        return department;
+    }
+
+    /**
+     * @param department the department to set
+     */
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
 }

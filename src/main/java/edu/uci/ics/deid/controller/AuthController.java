@@ -1,32 +1,26 @@
 package edu.uci.ics.deid.controller;
 
-import edu.uci.ics.deid.model.MacAddress;
-import edu.uci.ics.deid.repository.AuthorizedUserRepository;
-import edu.uci.ics.deid.repository.OptoutDeviceRepository;
-import edu.uci.ics.deid.util.ParameterStringBuilder;
-
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import edu.uci.ics.deid.repository.AuthorizedUserRepository;
+import edu.uci.ics.deid.util.ParameterStringBuilder;
 
 @RestController
 @CrossOrigin()
@@ -57,8 +51,31 @@ public class AuthController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @CrossOrigin()
+    @RequestMapping(value = "/admin", method = RequestMethod.GET)
+    public ResponseEntity<?> authAdmin(@CookieValue(value="ucinetid_auth", defaultValue="") String uciAuthCookieValue) {
+
+        String operator = getOperator(uciAuthCookieValue);
+
+        if (operator.equals("")){
+            return new ResponseEntity<Error>(HttpStatus.UNAUTHORIZED);
+        }
+
+        Boolean isAuthorized = isAdmin(operator);
+
+        if (isAuthorized == false){
+            return new ResponseEntity<Error>(HttpStatus.UNAUTHORIZED);
+        }
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     public Boolean isAuthorizedUser(String uciNetId){
         return authorizedUserRepo.isUciNetIdAuthorized(uciNetId);
+    }
+
+    public Boolean isAdmin(String uciNetId){
+        return authorizedUserRepo.isUciNetIdAdmin(uciNetId);
     }
 
     public String getOperator(String uciAuthCookieValue){
