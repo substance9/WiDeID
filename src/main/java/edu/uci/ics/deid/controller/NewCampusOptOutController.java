@@ -1,7 +1,9 @@
 package edu.uci.ics.deid.controller;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import edu.uci.ics.deid.model.MacAddress;
+import edu.uci.ics.deid.model.entity.OptoutChangeLog;
 import edu.uci.ics.deid.repository.OptoutDeviceChangeHistoryRepository;
 import edu.uci.ics.deid.repository.OptoutDeviceRepository;
 
@@ -87,6 +90,108 @@ public class NewCampusOptOutController {
             }
         }
         return new ResponseEntity<OptoutResponseBody>(responseBody,HttpStatus.OK);
+    }
+
+    @CrossOrigin()
+    @RequestMapping(value = "/log", method = RequestMethod.GET)
+    public ResponseEntity<List<OptoutLogResponse>> getLogs(
+            @CookieValue(value = "ucinetid_auth", defaultValue = "") String uciAuthCookieValue) {
+
+        List<OptoutLogResponse> logsReponseList= new ArrayList<OptoutLogResponse>();
+
+        String operator = authController.getOperator(uciAuthCookieValue);
+        if (operator.equals("")) {
+            return new ResponseEntity<List<OptoutLogResponse>>(logsReponseList, HttpStatus.UNAUTHORIZED);
+        }
+
+        Boolean isAuthorized = authController.isAdmin(operator);
+        if (isAuthorized == false) {
+            return new ResponseEntity<List<OptoutLogResponse>>(logsReponseList, HttpStatus.UNAUTHORIZED);
+        }
+
+        logger.debug("authorized admin");
+
+        List<OptoutChangeLog> logsList = optoutLogRepo.getLogs();
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+
+        for (int i = 0; i< logsList.size(); i++){
+            OptoutChangeLog log = logsList.get(i);
+            OptoutLogResponse logResponse = new OptoutLogResponse();
+            logResponse.setMacStr(log.getDevMac().getMacAddrStr());
+            logResponse.setOperator(log.getOperator());
+            logResponse.setAction(log.getAction());
+            Date date = new Date();
+            date.setTime(log.getTime().getTime());
+            logResponse.setTimeStr(sdf.format(date));
+
+            logsReponseList.add(logResponse);
+        }
+
+        return new ResponseEntity<List<OptoutLogResponse>>(logsReponseList, HttpStatus.OK);
+    }
+
+    private class OptoutLogResponse{
+        private String macStr;
+        private String operator;
+        private String timeStr;
+        private String action;
+
+        /**
+         * @return the macStr
+         */
+        public String getMacStr() {
+            return macStr;
+        }
+
+        /**
+         * @param macStr the macStr to set
+         */
+        public void setMacStr(String macStr) {
+            this.macStr = macStr;
+        }
+
+        /**
+         * @return the operator
+         */
+        public String getOperator() {
+            return operator;
+        }
+
+        /**
+         * @param operator the operator to set
+         */
+        public void setOperator(String operator) {
+            this.operator = operator;
+        }
+
+        /**
+         * @return the timeStr
+         */
+        public String getTimeStr() {
+            return timeStr;
+        }
+
+        /**
+         * @param timeStr the timeStr to set
+         */
+        public void setTimeStr(String timeStr) {
+            this.timeStr = timeStr;
+        }
+
+        /**
+         * @return the action
+         */
+        public String getAction() {
+            return action;
+        }
+
+        /**
+         * @param action the action to set
+         */
+        public void setAction(String action) {
+            this.action = action;
+        }
     }
 
     private class OptoutResponseBody{

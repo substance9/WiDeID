@@ -1,8 +1,12 @@
 package edu.uci.ics.deid.repository;
 
 import edu.uci.ics.deid.model.MacAddress;
+import edu.uci.ics.deid.model.entity.OptoutChangeLog;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,5 +36,24 @@ public class OptoutDeviceChangeHistoryRepository {
         );
 
         return ret;
+    }
+
+    public List<OptoutChangeLog> getLogs(){
+        String sql = "SELECT dev_mac, operator, time, action FROM optout_device_change_history";
+
+        List<OptoutChangeLog> logs = new ArrayList<OptoutChangeLog>();
+
+        List<Map<String,Object>> rows = jdbcTemplate.queryForList(sql);
+        for (Map row : rows) {
+            OptoutChangeLog log = new OptoutChangeLog();
+            MacAddress mac = new MacAddress((Long)row.get("dev_mac"));
+            log.setDevMac(mac);
+            log.setOperator((String)row.get("operator"));
+            log.setAction((String)row.get("action"));
+            log.setTime((Timestamp)row.get("time"));
+            logs.add(log);
+        }
+
+        return logs;
     }
 }
