@@ -20,25 +20,19 @@ public class DeviceFilterLogger implements DisposableBean, Runnable {
     @Autowired
     DeviceFilterLogRepository deviceFilterLogRepo;
 
+    @Autowired
+    DeviceFilterLogQueue logQueue;
+
     private Thread thread;
     private volatile boolean running;
 
-    private BlockingQueue<DeviceFilterLog> logQueue;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public DeviceFilterLogger() {
         this.thread = new Thread(this);
-        logQueue = new ArrayBlockingQueue<>(1024);
     }
 
-    public void addDeviceFilterEvent(DeviceFilterLog filterEvt) {
-        try {
-            logQueue.put(filterEvt);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public void run() {
@@ -50,10 +44,15 @@ public class DeviceFilterLogger implements DisposableBean, Runnable {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
-            deviceFilterLogRepo.addLog(filterLog.getTimestamp(),
+            
+            try {
+                deviceFilterLogRepo.addLog(filterLog.getTimestamp(),
                                         filterLog.getClientMac(),
                                         filterLog.getReasons());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
         }
     }
 

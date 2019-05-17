@@ -37,6 +37,9 @@ public class DeviceFilter implements DisposableBean, Runnable {
     RawEventSendQueue sendQueue;
 
     @Autowired
+    DeviceFilterLogQueue logQueue;
+
+    @Autowired
     Parser parser;
 
     @Autowired
@@ -117,7 +120,7 @@ public class DeviceFilter implements DisposableBean, Runnable {
             else{
                 //Discard the data and generate the log for attestation in the future
                 filterLog = new DeviceFilterLog(rawEvt, discardReasons);
-                deviceFilterLogger.addDeviceFilterEvent(filterLog);
+                logQueue.put(filterLog);
                 logger.debug("Device " + rawEvt.getClientMac().getMacAddrStr() + " is opted-out device, Discard data.");
                 numMsgDiscarded++;
                 continue;

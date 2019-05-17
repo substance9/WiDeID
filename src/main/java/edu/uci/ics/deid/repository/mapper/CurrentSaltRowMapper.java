@@ -2,7 +2,6 @@ package edu.uci.ics.deid.repository.mapper;
 
 import edu.uci.ics.deid.model.MacAddress;
 import edu.uci.ics.deid.model.entity.CurrentSalt;
-import edu.uci.ics.deid.model.entity.Device;
 import org.springframework.jdbc.core.RowMapper;
 
 import java.sql.ResultSet;
