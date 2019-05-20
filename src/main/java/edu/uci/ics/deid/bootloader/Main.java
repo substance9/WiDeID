@@ -10,7 +10,7 @@ public class Main {
 	public static void main(String[] args) {
 		ArgumentParser parser = ArgumentParsers.newFor("Main").build().defaultHelp(true)
 				.description("Start Service for DeID");
-		parser.addArgument("-s", "--service").choices("device_filter", "deid_engine", "web_service")
+		parser.addArgument("-s", "--service").choices("device_filter", "deid_engine", "web_service","dispatcher")
 				.setDefault("device_filter").required(true).help("Specify service to start");
 		parser.addArgument("-f", "--file").required(true).help("Specify the config file to read");
 		Namespace ns = null;
@@ -30,8 +30,8 @@ public class Main {
 			DeidEngineMain.main(args);
 		} else if (serverName.equals("web_service")) {
 			WebServiceMain.main(args);
-			// } else if (serverName.equals("web")) {
-			// WebServer.main(args);
+		} else if (serverName.equals("dispatcher")) {
+			 DispatcherMain.main(args);
 		} else {
 			System.out.println("Unknown server type: " + serverName);
 			parser.printHelp();

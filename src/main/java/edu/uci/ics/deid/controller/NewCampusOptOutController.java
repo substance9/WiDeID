@@ -48,7 +48,7 @@ public class NewCampusOptOutController {
             return new ResponseEntity<String>("No UCI Session Detected",HttpStatus.UNAUTHORIZED);
         }
 
-        Boolean isAuthorized = authController.isAuthorizedUser(operator);
+        Boolean isAuthorized = (authController.isAuthorizedUser(operator) || authController.isAdmin(operator));
         if (isAuthorized == false){
             return new ResponseEntity<Error>(HttpStatus.UNAUTHORIZED);
         }

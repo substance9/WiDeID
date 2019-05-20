@@ -1,0 +1,15 @@
+spring:
+  main:
+    web-application-type: none
+  datasource:
+    url: jdbc:postgresql://URL:PORTNUMBER/DB_NAME
+    username: INPUT_HERE
+    password: INPUT_HERE
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 60000
+      maximum-pool-size: 20
+
+tippers_dispatcher:
+  secret: INPUT_THE_REAL_KEY_HERE
+  port: INPUT_PORT_NUMBER_HERE

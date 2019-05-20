@@ -15,6 +15,9 @@ public class DeidConnectionEventMsg {
         this.type = deidConnEvt.getType();
     }
 
+    public DeidConnectionEventMsg(){
+    }
+
     public String getClientId() {
         return clientId;
     }
