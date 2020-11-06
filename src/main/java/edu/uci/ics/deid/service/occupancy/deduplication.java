@@ -1,3 +1,5 @@
+package edu.uci.ics.deid.service.occupancy;
+
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;

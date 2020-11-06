@@ -1,3 +1,5 @@
+package edu.uci.ics.deid.service.occupancy;
+
 import java.io.*;
 import java.util.*;
 import java.io.FileWriter;

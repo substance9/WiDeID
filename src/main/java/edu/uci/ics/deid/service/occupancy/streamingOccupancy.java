@@ -1,3 +1,5 @@
+package edu.uci.ics.deid.service.occupancy;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.io.*;
@@ -21,7 +23,6 @@ public class streamingOccupancy {
     public static List<Integer> labels = new ArrayList<>();
     public static Map<String, Integer> hm = new HashMap<String, Integer>();
     public static Map<Pair<Integer, Integer>, Double> map = new HashMap<Pair<Integer, Integer>, Double>();//map the similarity to edge, for test purpose
-
 
 
     public static void readGraph(){

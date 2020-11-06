@@ -2,7 +2,7 @@ package edu.uci.ics.deid.model;
 
 public class RawConnectionEventMsg {
 
-    private String apId;
+    private String apId;//AP name
     private long apMac;
     private long clientMac;
     private long timestamp;

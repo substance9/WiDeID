@@ -1,3 +1,5 @@
+package edu.uci.ics.deid.service.occupancy;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;

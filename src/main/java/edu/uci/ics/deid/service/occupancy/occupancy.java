@@ -1,3 +1,5 @@
+package edu.uci.ics.deid.service.occupancy;
+
 import javax.xml.crypto.Data;
 import java.io.BufferedWriter;
 import java.io.FileWriter;

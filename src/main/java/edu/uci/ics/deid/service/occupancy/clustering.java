@@ -1,3 +1,4 @@
+package edu.uci.ics.deid.service.occupancy;
 /*
 input: pair-wise similarity from denseSimPair
 output: cluster label for each node to clusterMergeLabel

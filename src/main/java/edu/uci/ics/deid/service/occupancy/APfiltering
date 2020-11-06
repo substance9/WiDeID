@@ -1,0 +1,110 @@
+package edu.uci.ics.deid.service.occupancy;
+
+import java.io.IOException;
+
+import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.List;
+import java.io.*;
+import java.util.*;
+import javafx.util.Pair;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.zeromq.ZContext;
+import org.zeromq.ZMQ;
+
+import edu.uci.ics.deid.model.RawConnectionEvent;
+import edu.uci.ics.deid.model.RawConnectionEventMsg;
+
+import java.time.Duration;
+import java.time.Instant;
+
+public class APfiltering{
+
+    @Autowired
+    RawEventRecvQueue recvQueue;
+
+    @Autowired
+    DeidConnectionEventSendQueue sendQueue;
+
+    List<ArrayList<String>> events = new ArrayList<ArrayList<String>>();
+    Map<String, Integer> hm = new HashMap<String, Integer>();
+    List<String> aps = new ArrayList<>();
+
+    private Instant lastTimestamp;
+    private Instant currentTimestamp;
+    private Duration timeElapsed;
+
+    public void run(){
+        lastTimestamp = Instant.now();
+        streamingOccupancy.readGraph();
+        while(true){
+            RawConnectionEvent evt;
+            //read event from queue
+            try {
+                evt = recvQueue.take();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void mapAP(){
+        //read required AP from files
+        try {
+            FileReader fin = new FileReader("aps.txt");
+            String line;
+            int id=0;
+            while(src.hasNext()){
+                line = src.next();
+                aps.add(line);
+                hm.put(line,id++);
+            }
+            fin.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void assignEvent(RawConnectionEvent evt){
+
+        int id = hm.get(evt.apId);
+        currentTimestamp = evt.getTimestamp;
+        events.get(id).add(evt.getApMac());
+        timeElapsed = Duration.between(lastTimestamp, currentTimestamp);
+
+        if(timeElapsed.toSeconds > 60){
+            //compute occupancy: run async
+            computeOccupancy(events, currentTimestamp);
+            //clear current list
+            for(int i=0;i<events.size();i++){
+                events.get(i).clear();
+            }
+            //update timeStamp
+            lastTimestamp = currentTimestamp;
+        }
+    }
+
+    public void computeOccupancy(List<List<String>> events, string timeStamp){//to change it using a thread
+        Occupancy occupancyOutput = new Ocupancy();
+        occupancyOutput.timeStamp = timeStamp;
+        for(int i=0;i<events.size();i++){
+            OccupancyUnit occu = new OccupancyUnit();
+            occu.Apid = hm.getKey(i);
+            occu.count = streamingOccupancy.computeOccupancy(events.get(i));
+            occupancyOutput.occupancyArray.add(occu);
+        }
+        try {
+            sendQueue.put(occupancyOutput);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+}
