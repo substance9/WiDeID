@@ -10,7 +10,7 @@ public class Main {
 	public static void main(String[] args) {
 		ArgumentParser parser = ArgumentParsers.newFor("Main").build().defaultHelp(true)
 				.description("Start Service for DeID");
-		parser.addArgument("-s", "--service").choices("device_filter", "deid_engine", "web_service","dispatcher")
+		parser.addArgument("-s", "--service").choices("device_filter", "deid_engine", "web_service","dispatcher","occupancy")
 				.setDefault("device_filter").required(true).help("Specify service to start");
 		parser.addArgument("-f", "--file").required(true).help("Specify the config file to read");
 		Namespace ns = null;
