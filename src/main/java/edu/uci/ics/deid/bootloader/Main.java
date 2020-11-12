@@ -13,6 +13,8 @@ public class Main {
 		parser.addArgument("-s", "--service").choices("device_filter", "deid_engine", "web_service","dispatcher")
 				.setDefault("device_filter").required(true).help("Specify service to start");
 		parser.addArgument("-f", "--file").required(true).help("Specify the config file to read");
+		// TODO : Implement service discovery configuration 
+
 		Namespace ns = null;
 
 		try {

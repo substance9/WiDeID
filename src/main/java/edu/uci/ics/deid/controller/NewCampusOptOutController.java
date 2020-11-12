@@ -16,7 +16,10 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 import edu.uci.ics.deid.model.MacAddress;
 import edu.uci.ics.deid.model.entity.OptoutChangeLog;
@@ -38,18 +41,19 @@ public class NewCampusOptOutController {
 
     @Autowired
     OptoutDeviceChangeHistoryRepository optoutLogRepo;
-    
+
     @CrossOrigin()
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<?> update(@RequestBody List<String> macStrs, @CookieValue(value="ucinetid_auth", defaultValue="") String uciAuthCookieValue) {
+    public ResponseEntity<?> update(@RequestBody List<String> macStrs,
+            @CookieValue(value = "ucinetid_auth", defaultValue = "") String uciAuthCookieValue) {
 
         String operator = authController.getOperator(uciAuthCookieValue);
-        if (operator.equals("")){
-            return new ResponseEntity<String>("No UCI Session Detected",HttpStatus.UNAUTHORIZED);
+        if (operator.equals("")) {
+            return new ResponseEntity<String>("No UCI Session Detected", HttpStatus.UNAUTHORIZED);
         }
 
         Boolean isAuthorized = (authController.isAuthorizedUser(operator) || authController.isAdmin(operator));
-        if (isAuthorized == false){
+        if (isAuthorized == false) {
             return new ResponseEntity<Error>(HttpStatus.UNAUTHORIZED);
         }
         OptoutResponseBody responseBody = new OptoutResponseBody();
@@ -57,20 +61,20 @@ public class NewCampusOptOutController {
         MacAddress newMac = null;
         MacAddress exitstedMac = null;
 
-        for (int i = 0; i < macStrs.size(); i++){
+        for (int i = 0; i < macStrs.size(); i++) {
             logger.debug("mac: " + macStrs.get(i));
             newMac = new MacAddress(macStrs.get(i));
 
             // if (newMac == null){
-            //     logger.error("Cannot Parse MAC: " + macStrs.get(i));
-            //     continue;
+            // logger.error("Cannot Parse MAC: " + macStrs.get(i));
+            // continue;
             // }
 
-            //First check if existed
+            // First check if existed
             exitstedMac = null;
             exitstedMac = optoutDevRepo.getByMacLong(newMac.getMacAddrLong());
 
-            if(exitstedMac != null){
+            if (exitstedMac != null) {
                 logger.debug("Duplicated Optout Device Detected: " + exitstedMac.getMacAddrStr());
                 responseBody.addToExistedList(exitstedMac.getMacAddrStr());
                 continue;
@@ -78,18 +82,18 @@ public class NewCampusOptOutController {
 
             int ret = optoutDevRepo.addMac(newMac);
 
-            if (ret == 1){
+            if (ret == 1) {
                 // Log the operation
                 Timestamp now = new Timestamp(System.currentTimeMillis());
                 optoutLogRepo.addLog(newMac, operator, now, "INSERT");
 
                 // Generate HTTP success response
                 responseBody.addToSuccessList(newMac.getMacAddrStr());
-            }else{
+            } else {
                 responseBody.addToFailedList(newMac.getMacAddrStr());
             }
         }
-        return new ResponseEntity<OptoutResponseBody>(responseBody,HttpStatus.OK);
+        return new ResponseEntity<OptoutResponseBody>(responseBody, HttpStatus.OK);
     }
 
     @CrossOrigin()
@@ -97,7 +101,7 @@ public class NewCampusOptOutController {
     public ResponseEntity<List<OptoutLogResponse>> getLogs(
             @CookieValue(value = "ucinetid_auth", defaultValue = "") String uciAuthCookieValue) {
 
-        List<OptoutLogResponse> logsReponseList= new ArrayList<OptoutLogResponse>();
+        List<OptoutLogResponse> logsReponseList = new ArrayList<OptoutLogResponse>();
 
         String operator = authController.getOperator(uciAuthCookieValue);
         if (operator.equals("")) {
@@ -115,7 +119,7 @@ public class NewCampusOptOutController {
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
-        for (int i = 0; i< logsList.size(); i++){
+        for (int i = 0; i < logsList.size(); i++) {
             OptoutChangeLog log = logsList.get(i);
             OptoutLogResponse logResponse = new OptoutLogResponse();
             logResponse.setMacStr(log.getDevMac().getMacAddrStr());
@@ -131,7 +135,129 @@ public class NewCampusOptOutController {
         return new ResponseEntity<List<OptoutLogResponse>>(logsReponseList, HttpStatus.OK);
     }
 
-    private class OptoutLogResponse{
+    @CrossOrigin()
+    @RequestMapping(value = "/dev_status", method = RequestMethod.GET)
+    public @ResponseBody String getDevStatus(
+            @CookieValue(value = "ucinetid_auth", defaultValue = "") String uciAuthCookieValue,
+            @RequestParam(value = "mac_addr") String macString) {
+
+        MacAddress inputMacAddr = new MacAddress(macString);
+
+        MacAddress returnMacAddr = optoutDevRepo.getByMacLong(inputMacAddr.getMacAddrLong());
+
+        String retString = "1";
+
+        if (returnMacAddr == null) {
+            retString = "0";
+        }
+
+        return retString;
+    }
+
+    @CrossOrigin()
+    @RequestMapping(value = "/all_reg_devs_by_ucinetid", method = RequestMethod.GET)
+    public @ResponseBody String getAllDevicesByUciId(
+            @CookieValue(value = "ucinetid_auth", defaultValue = "") String uciAuthCookieValue,
+            @RequestParam(value = "ucinetid") String ucinetid) {
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        String reqString = "https://apps.oit.uci.edu/mobileaccess/splunk/lookup.php?ucinetid=".concat(ucinetid);
+        ResponseEntity<String> response = restTemplate.getForEntity(reqString, String.class);
+
+        String retString = "";
+
+        if (HttpStatus.OK == response.getStatusCode()) {
+            String macStrs = response.getBody();
+            macStrs = macStrs.toUpperCase();
+            for (String macStrRaw : macStrs.split(",")) {
+                macStrRaw = macStrRaw.trim();
+                String macStr = macStrRaw.replaceAll("..(?!$)", "$0 ");
+                retString = retString.concat(macStr);
+                retString = retString.concat("\n");
+            }
+            retString = retString.substring(0, retString.length() - 1);
+        } else {
+            retString = "0";
+        }
+
+        return retString;
+    }
+
+    @CrossOrigin()
+    @RequestMapping(value = "/self_optout_add", method = RequestMethod.GET)
+    public @ResponseBody String addSelfOptoutDev(
+            @CookieValue(value = "ucinetid_auth", defaultValue = "") String uciAuthCookieValue,
+            @RequestParam(value = "ucinetid") String ucinetid, @RequestParam(value = "mac_addr") String macString) {
+
+        MacAddress newMac = new MacAddress(macString);
+        String operator = ucinetid;
+
+        MacAddress exitstedMac = null;
+
+        exitstedMac = optoutDevRepo.getByMacLong(newMac.getMacAddrLong());
+
+        String retString = "0";
+
+        if (exitstedMac != null) {
+            logger.debug("Duplicated Optout Device Detected: " + exitstedMac.getMacAddrStr());
+            retString = "1";
+            return retString;
+        }
+
+        int ret = optoutDevRepo.addMac(newMac);
+
+        if (ret == 1) {
+            // Log the operation
+            Timestamp now = new Timestamp(System.currentTimeMillis());
+            optoutLogRepo.addLog(newMac, operator, now, "INSERT");
+            // Generate HTTP success response
+            retString = "1";
+        } else {
+            retString = "0";
+        }
+
+        return retString;
+    }
+
+    @CrossOrigin()
+    @RequestMapping(value = "/self_optout_remove", method = RequestMethod.GET)
+    public @ResponseBody String removeSelfOptoutDev(
+            @CookieValue(value = "ucinetid_auth", defaultValue = "") String uciAuthCookieValue,
+            @RequestParam(value = "ucinetid") String ucinetid, @RequestParam(value = "mac_addr") String macString) {
+
+        MacAddress newMac = new MacAddress(macString);
+        String operator = ucinetid;
+
+        MacAddress exitstedMac = null;
+
+        exitstedMac = optoutDevRepo.getByMacLong(newMac.getMacAddrLong());
+
+        String retString = "0";
+
+        if (exitstedMac == null) {
+            logger.debug("Optout device not existed: " + exitstedMac.getMacAddrStr());
+            retString = "1";
+            return retString;
+        }
+
+        //has optout entry for the mac
+        int ret = optoutDevRepo.removeMac(newMac);
+
+        if (ret == 1) {
+            // Log the operation
+            Timestamp now = new Timestamp(System.currentTimeMillis());
+            optoutLogRepo.addLog(newMac, operator, now, "DELETE");
+            // Generate HTTP success response
+            retString = "1";
+        } else {
+            retString = "0";
+        }
+
+        return retString;
+    }
+
+    private class OptoutLogResponse {
         private String macStr;
         private String operator;
         private String timeStr;
@@ -194,26 +320,26 @@ public class NewCampusOptOutController {
         }
     }
 
-    private class OptoutResponseBody{
+    private class OptoutResponseBody {
         private List<String> successInsertionList;
         private List<String> existedList;
         private List<String> failedList;
 
-        public OptoutResponseBody(){
+        public OptoutResponseBody() {
             successInsertionList = new ArrayList<String>();
             existedList = new ArrayList<String>();
             failedList = new ArrayList<String>();
         }
 
-        public void addToSuccessList(String macStr){
+        public void addToSuccessList(String macStr) {
             successInsertionList.add(macStr);
         }
 
-        public void addToExistedList(String macStr){
+        public void addToExistedList(String macStr) {
             existedList.add(macStr);
         }
 
-        public void addToFailedList(String macStr){
+        public void addToFailedList(String macStr) {
             failedList.add(macStr);
         }
 

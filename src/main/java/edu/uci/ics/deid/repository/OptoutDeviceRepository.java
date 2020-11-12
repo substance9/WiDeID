@@ -43,4 +43,14 @@ public class OptoutDeviceRepository {
 
         return ret;
     }
+
+    public int removeMac(MacAddress mac){
+        logger.debug("Try Delete MAC address: " + String.valueOf(mac.getMacAddrStr()) + " from Opt-out Table" );
+        int ret = jdbcTemplate.update(
+                "DELETE FROM optout_device WHERE dev_mac = ?",
+                mac.getMacAddrLong()
+        );
+
+        return ret;
+    }
 }
