@@ -9,7 +9,7 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
-public class occupancy {
+public class OccupancyTest {
     public static void main(String[] args) {
         //clustering.readEdge();
         //clustering.clusterMerge();

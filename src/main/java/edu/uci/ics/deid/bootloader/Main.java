@@ -30,6 +30,8 @@ public class Main {
 			DeidEngineMain.main(args);
 		} else if (serverName.equals("web_service")) {
 			WebServiceMain.main(args);
+		} else if (serverName.equals("occupancy")) {
+			OccupancyAnalysisMain.main(args);
 		} else if (serverName.equals("dispatcher")) {
 			 DispatcherMain.main(args);
 		} else {

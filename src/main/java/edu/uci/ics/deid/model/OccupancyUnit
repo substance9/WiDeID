@@ -1,6 +1,0 @@
-package edu.uci.ics.deid.model;
-
-public class OccupancyUnit{
-    string Apid;
-    int count;
-}

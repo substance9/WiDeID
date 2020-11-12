@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.io.*;
 import java.util.*;
-import javafx.util.Pair;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
@@ -18,19 +17,26 @@ import org.springframework.stereotype.Component;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
+import edu.uci.ics.deid.model.Occupancy;
+import edu.uci.ics.deid.model.OccupancyUnit;
 import edu.uci.ics.deid.model.RawConnectionEvent;
 import edu.uci.ics.deid.model.RawConnectionEventMsg;
 
 import java.time.Duration;
 import java.time.Instant;
 
-public class APfiltering{
+public class OccupancyAnalysis{
+
+    // @Value("${device_filter.optout_filter.filter_reason}")
+    // private String filterReason;
 
     @Autowired
     RawEventRecvQueue recvQueue;
 
-    @Autowired
-    DeidConnectionEventSendQueue sendQueue;
+    // @Autowired
+    // DeidConnectionEventSendQueue sendQueue;
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     List<ArrayList<String>> events = new ArrayList<ArrayList<String>>();
     Map<String, Integer> hm = new HashMap<String, Integer>();
@@ -58,6 +64,8 @@ public class APfiltering{
         //read required AP from files
         try {
             FileReader fin = new FileReader("aps.txt");
+            //TODO: do not hard code any parameter
+            Scanner src = new Scanner(fin);
             String line;
             int id=0;
             while(src.hasNext()){
@@ -73,12 +81,12 @@ public class APfiltering{
 
     public void assignEvent(RawConnectionEvent evt){
 
-        int id = hm.get(evt.apId);
-        currentTimestamp = evt.getTimestamp;
-        events.get(id).add(evt.getApMac());
+        int id = hm.get(evt.getApId());
+        currentTimestamp = evt.getTimestamp().toInstant();
+        events.get(id).add(evt.getApMac().toString());
         timeElapsed = Duration.between(lastTimestamp, currentTimestamp);
 
-        if(timeElapsed.toSeconds > 60){
+        if(timeElapsed.toSeconds() > 60){
             //compute occupancy: run async
             computeOccupancy(events, currentTimestamp);
             //clear current list
@@ -90,17 +98,20 @@ public class APfiltering{
         }
     }
 
-    public void computeOccupancy(List<List<String>> events, string timeStamp){//to change it using a thread
-        Occupancy occupancyOutput = new Ocupancy();
-        occupancyOutput.timeStamp = timeStamp;
+    public void computeOccupancy(List<ArrayList<String>> events, Instant currentTimestamp2){//to change it using a thread
+        Occupancy occupancyOutput = new Occupancy();
+        occupancyOutput.setTimeStamp(currentTimestamp2.toString());
         for(int i=0;i<events.size();i++){
             OccupancyUnit occu = new OccupancyUnit();
-            occu.Apid = hm.getKey(i);
-            occu.count = streamingOccupancy.computeOccupancy(events.get(i));
-            occupancyOutput.occupancyArray.add(occu);
+            //occu.setApid(hm.getKey(i));
+            //need to add another hashmap to map the "value" to "key"
+            occu.setCount(streamingOccupancy.computeOccupancy(events.get(i)));
+            occupancyOutput.getOccupancyArray().add(occu);
         }
         try {
-            sendQueue.put(occupancyOutput);
+            //sendQueue.put(occupancyOutput);
+            logger.debug("Try to send a occupancy output");
+            //logger.info(occupancyOutput);
         } catch (Exception e) {
             e.printStackTrace();
         }

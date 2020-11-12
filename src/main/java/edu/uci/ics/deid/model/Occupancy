@@ -1,6 +1,0 @@
-package edu.uci.ics.deid.model;
-
-public class Occupancy{
-    List<Occupancy> occupancyArray;
-    string timeStamp;
-}

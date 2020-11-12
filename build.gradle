@@ -43,6 +43,8 @@ dependencies {
 	implementation "org.postgresql:postgresql:42.2.5"
 	implementation "com.zaxxer:HikariCP:3.1.0"
 
+	implementation "org.openjfx:javafx:11"
+
 	//legacy
 	implementation "javax.xml.bind:jaxb-api:2.3.0"
 
