@@ -1,5 +1,7 @@
 package edu.uci.ics.deid.service.occupancy;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.io.*;
@@ -8,6 +10,7 @@ import javafx.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Component
 public class streamingOccupancy {
 
     @Value("${occupancy.input_data.deviceGraph}")

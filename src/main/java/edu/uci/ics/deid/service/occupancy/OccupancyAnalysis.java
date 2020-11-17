@@ -66,7 +66,9 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         this.thread = new Thread(this);
     }
 
-    streamingOccupancy SO = new streamingOccupancy();
+    @Autowired
+    streamingOccupancy SO;
+    //streamingOccupancy SO = new streamingOccupancy();
 
     @Override
     public void run(){
