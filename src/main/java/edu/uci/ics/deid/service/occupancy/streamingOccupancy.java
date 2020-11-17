@@ -11,32 +11,32 @@ import org.slf4j.LoggerFactory;
 public class streamingOccupancy {
 
     @Value("${occupancy.input_data.deviceGraph}")
-    private static String graphFile;
+    private String graphFile;
 
     @Value("${occupancy.input_data.cluterLabel}")
-    private static String clusterLabelFile;
+    private String clusterLabelFile;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public static class EDGE {
+    public class EDGE {
         int start;
         int end;
         double sim;
     }
 
-    public static class CLUSTER{
+    public class CLUSTER{
         List<Integer> cluster = new ArrayList<>();
     }
 
-    public static List<EDGE> edges = new ArrayList<>();
-    public static List<String> macs = new ArrayList<>();
-    public static List<Integer> labels = new ArrayList<>();
-    public static Map<String, Integer> hm = new HashMap<String, Integer>();
-    public static Map<Pair<Integer, Integer>, Double> map = new HashMap<Pair<Integer, Integer>, Double>();//map the similarity to edge, for test purpose
+    public List<EDGE> edges = new ArrayList<>();
+    public List<String> macs = new ArrayList<>();
+    public List<Integer> labels = new ArrayList<>();
+    public Map<String, Integer> hm = new HashMap<String, Integer>();
+    public Map<Pair<Integer, Integer>, Double> map = new HashMap<Pair<Integer, Integer>, Double>();//map the similarity to edge, for test purpose
     
 
-    public static void readGraph(){
+    public void readGraph(){
         try {
-            System.out.println("graphFile: " + graphFile);
+            System.out.println("====================graphFile: " + graphFile);
             FileReader fin = new FileReader(graphFile);
             Scanner src = new Scanner(fin);
             FileReader finLabel = new FileReader(clusterLabelFile);
@@ -75,11 +75,11 @@ public class streamingOccupancy {
         }
     }
 
-    public static int findCluster(String macAddress){
+    public int findCluster(String macAddress){
         return hm.get(macAddress);
     }
 
-    public static int computeOccupancy(List<String> sequentialMacs){
+    public int computeOccupancy(List<String> sequentialMacs){
         int occupancy = 0;
         Map<Integer, Integer> map = new HashMap<Integer, Integer>();
         for(int i=0;i<sequentialMacs.size();i++){
@@ -91,7 +91,7 @@ public class streamingOccupancy {
         return occupancy;
     }
 
-    public static void clusterAnslysis(){
+    public void clusterAnslysis(){
         List<CLUSTER> clusters = new ArrayList<>();
         int label;
         //initial clusters

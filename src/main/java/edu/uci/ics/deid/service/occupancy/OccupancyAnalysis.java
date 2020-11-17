@@ -39,6 +39,12 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     @Value("${occupancy.input_data.WiFiAPs}")
     private String wifiAPFile;
 
+    @Value("${occupancy.parameter.staticStart}")
+    private Integer staticStart;
+
+    @Value("${occupancy.parameter.staticEnd}")
+    private Integer staticEnd;
+
     @Autowired
     RawEventRecvQueue recvQueue;
 
@@ -47,31 +53,51 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     List<ArrayList<String>> events = new ArrayList<ArrayList<String>>();
     Map<String, Integer> hm = new HashMap<String, Integer>();
     Map<Integer, String> rehm = new HashMap<Integer, String>();
+    Map<String, Integer> staticDevice = new HashMap<String, Integer>();
     List<String> aps = new ArrayList<>();
 
     private Instant lastTimestamp;
     private Instant currentTimestamp;
     private Duration timeElapsed;
 
+    //DateTimeFormatter formatter = new SimpleDateFormat("HH");//extract hour from date
+
     public OccupancyAnalysis(){
         this.thread = new Thread(this);
     }
+
+    streamingOccupancy SO = new streamingOccupancy();
 
     @Override
     public void run(){
         RawConnectionEvent evt = null;
         lastTimestamp = Instant.now();
-        streamingOccupancy.readGraph();
+        SO.readGraph();
         while(this.running){
             //read event from queue
             try {
                 evt = recvQueue.take();
+                //filterStaticDevice(evt);
                 assignEvent(evt);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
+
+    /*public void filterStaticDevice(RawConnectionEvent evt){
+        Date nowDate = Date.from(evt.getTimestamp().toInstant());
+        String hour = formatter.format(nowDate);
+        String mac = evt.getClientMac();
+        if(Integer.valueOf(hour) >= staticStart && Integer.valueOf(hour) <= staticEnd){
+            if(!staticDevice.containsKey(mac)){//add a new device
+                staticDevice.put(mac, 0);
+            }
+            else{//update count
+
+            }
+        }
+    }*/
 
     public void mapAP(){
         //read required AP from files
@@ -121,7 +147,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         for(int i=0;i<events.size();i++){
             OccupancyUnit occu = new OccupancyUnit();
             occu.setApid(rehm.get(i));
-            occu.setCount(streamingOccupancy.computeOccupancy(events.get(i)));
+            occu.setCount(SO.computeOccupancy(events.get(i)));
             occupancyOutput.getOccupancyArray().add(occu);
         }
         try {

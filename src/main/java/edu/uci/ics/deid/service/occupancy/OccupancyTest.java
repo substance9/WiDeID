@@ -12,13 +12,15 @@ import java.util.List;
 public class OccupancyTest {
 
     List<String> sequentialMacs = new ArrayList<>();
+
+    static streamingOccupancy SO = new streamingOccupancy();
     
     public static void main(String[] args) {
         //clustering.readEdge();
         //clustering.clusterMerge();
         //clustering.writeToFile();
-        streamingOccupancy.readGraph();
-        streamingOccupancy.clusterAnslysis();
+        SO.readGraph();
+        SO.clusterAnslysis();
     }
 
     public static void test_deduplication(){

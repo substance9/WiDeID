@@ -27,13 +27,15 @@ public class clustering {
     public static int cluster_id = 0;
     public static Map<Integer, Integer> map = new HashMap<Integer, Integer>();
 
-    public static void readEdge(){
+    streamingOccupancy SO1 = new streamingOccupancy();
+
+    public void readEdge(){
         try {
             FileReader fin = new FileReader("denseSimPair.txt");
             Scanner src = new Scanner(fin);
 
             while(src.hasNext()){
-                streamingOccupancy.EDGE edge = new streamingOccupancy.EDGE();
+                streamingOccupancy.EDGE edge = SO1.new EDGE();
                 edge.start = src.nextInt();
                 edge.end = src.nextInt();
                 edge.sim = src.nextDouble();
@@ -41,6 +43,7 @@ public class clustering {
             }
 
             fin.close();
+            src.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

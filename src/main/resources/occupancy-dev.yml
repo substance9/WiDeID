@@ -17,4 +17,6 @@ occupancy:
     WiFiAPs: ./util/wifiAPs.txt
   parameter:
     interval: 1 #window size
+    staticStart: 2 #2am
+    staticEnd: 6 #6am
 
