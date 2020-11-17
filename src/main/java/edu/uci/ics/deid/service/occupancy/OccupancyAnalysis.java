@@ -27,6 +27,7 @@ import edu.uci.ics.deid.model.RawConnectionEventMsg;
 import java.time.Duration;
 import java.time.Instant;
 
+@Component
 public class OccupancyAnalysis implements DisposableBean, Runnable {
 
     private Thread thread;
@@ -129,6 +130,17 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
             e.printStackTrace();
         }
 
+    }
+
+    @Override
+    public void destroy(){
+        running = false;
+    }
+
+    @PostConstruct
+    private  void init(){
+        this.running = true;
+        this.thread.start();
     }
 
 }
