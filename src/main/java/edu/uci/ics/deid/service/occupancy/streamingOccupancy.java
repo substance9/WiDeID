@@ -9,13 +9,13 @@ import javafx.util.Pair;
 public class streamingOccupancy {
 
     @Value("${occupancy.input_data.deviceGraph}")
-    private String graphFile;
+    private static String graphFile;
 
     @Value("${occupancy.input_data.cluterLabel}")
-    private String clusterLabelFile;
+    private static String clusterLabelFile;
 
     @Value("${occupancy.input_data.WiFiAPs}")
-    private String wifiAPFile;
+    private static String wifiAPFile;
 
     public static class EDGE {
         int start;
@@ -32,14 +32,16 @@ public class streamingOccupancy {
     public static List<Integer> labels = new ArrayList<>();
     public static Map<String, Integer> hm = new HashMap<String, Integer>();
     public static Map<Pair<Integer, Integer>, Double> map = new HashMap<Pair<Integer, Integer>, Double>();//map the similarity to edge, for test purpose
+    public static List<String> wifiAPs = new ArrayList<>();
 
-
-    public void readGraph(){
+    public static void readGraph(){
         try {
             FileReader fin = new FileReader(graphFile);
             Scanner src = new Scanner(fin);
             FileReader finLabel = new FileReader(clusterLabelFile);
             Scanner srcL = new Scanner(finLabel);
+            FileReader finAP = new FileReader(wifiAPFile);
+            Scanner srcAP = new Scanner(finAP);
             String line;
             //read nodes
             while(src.hasNext()){
@@ -63,8 +65,13 @@ public class streamingOccupancy {
             while(srcL.hasNext()){
                 labels.add(srcL.nextInt());
             }
+            //read wifiAPs
+            while(srcAP.hasNext()){
+                wifiAPs.add(srcAP.nextLine());
+            }
             fin.close();
             finLabel.close();
+            finAP.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -74,11 +81,11 @@ public class streamingOccupancy {
         }
     }
 
-    public int findCluster(String macAddress){
+    public static int findCluster(String macAddress){
         return hm.get(macAddress);
     }
 
-    public int computeOccupancy(List<String> sequentialMacs){
+    public static int computeOccupancy(List<String> sequentialMacs){
         int occupancy = 0;
         Map<Integer, Integer> map = new HashMap<Integer, Integer>();
         for(int i=0;i<sequentialMacs.size();i++){
@@ -90,7 +97,7 @@ public class streamingOccupancy {
         return occupancy;
     }
 
-    public void clusterAnslysis(){
+    public static void clusterAnslysis(){
         List<CLUSTER> clusters = new ArrayList<>();
         int label;
         //initial clusters
