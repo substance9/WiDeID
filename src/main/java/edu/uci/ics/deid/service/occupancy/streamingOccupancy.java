@@ -8,6 +8,15 @@ import javafx.util.Pair;
 
 public class streamingOccupancy {
 
+    @Value("${occupancy.input_data.deviceGraph}")
+    private String graphFile;
+
+    @Value("${occupancy.input_data.cluterLabel}")
+    private String clusterLabelFile;
+
+    @Value("${occupancy.input_data.WiFiAPs}")
+    private String wifiAPFile;
+
     public static class EDGE {
         int start;
         int end;
@@ -25,11 +34,11 @@ public class streamingOccupancy {
     public static Map<Pair<Integer, Integer>, Double> map = new HashMap<Pair<Integer, Integer>, Double>();//map the similarity to edge, for test purpose
 
 
-    public static void readGraph(){
+    public void readGraph(){
         try {
-            FileReader fin = new FileReader("denseGraph.txt");
+            FileReader fin = new FileReader(graphFile);
             Scanner src = new Scanner(fin);
-            FileReader finLabel = new FileReader("clusterMergeLabel.txt");
+            FileReader finLabel = new FileReader(clusterLabelFile);
             Scanner srcL = new Scanner(finLabel);
             String line;
             //read nodes
@@ -65,11 +74,11 @@ public class streamingOccupancy {
         }
     }
 
-    public static int findCluster(String macAddress){
+    public int findCluster(String macAddress){
         return hm.get(macAddress);
     }
 
-    public static int computeOccupancy(List<String> sequentialMacs){
+    public int computeOccupancy(List<String> sequentialMacs){
         int occupancy = 0;
         Map<Integer, Integer> map = new HashMap<Integer, Integer>();
         for(int i=0;i<sequentialMacs.size();i++){
@@ -81,7 +90,7 @@ public class streamingOccupancy {
         return occupancy;
     }
 
-    public static void clusterAnslysis(){
+    public void clusterAnslysis(){
         List<CLUSTER> clusters = new ArrayList<>();
         int label;
         //initial clusters

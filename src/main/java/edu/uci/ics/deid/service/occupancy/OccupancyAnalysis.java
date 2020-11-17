@@ -27,8 +27,8 @@ import java.time.Instant;
 
 public class OccupancyAnalysis{
 
-    // @Value("${device_filter.optout_filter.filter_reason}")
-    // private String filterReason;
+    @Value("${occupancy.parameter.interval}")
+    private Long interval;
 
     @Autowired
     RawEventRecvQueue recvQueue;

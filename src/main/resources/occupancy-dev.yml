@@ -11,10 +11,10 @@ spring:
       maximum-pool-size: 20
 
 occupancy:
-  stream_receiver:
-    in_pipe_path: ./util/pipe2
-  optout_filter:
-    filter_reason: Optout Device
-    cache_expiration_time: 30000 #in ms, 30 seconds
-    cache_size: 50000
+  input_data:
+    deviceGraph: ./util/denseGraph.txt
+    cluterLabel: ./util/clusterMergeLabel.txt
+    WiFiAPs: ./util/wifiAPs.txt
+  parameter:
+    interval: 1 #window size
 
