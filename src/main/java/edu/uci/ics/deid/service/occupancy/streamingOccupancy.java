@@ -1,5 +1,5 @@
 package edu.uci.ics.deid.service.occupancy;
-
+import org.springframework.beans.factory.annotation.Value;
 import java.util.ArrayList;
 import java.util.List;
 import java.io.*;
@@ -13,9 +13,6 @@ public class streamingOccupancy {
 
     @Value("${occupancy.input_data.cluterLabel}")
     private static String clusterLabelFile;
-
-    @Value("${occupancy.input_data.WiFiAPs}")
-    private static String wifiAPFile;
 
     public static class EDGE {
         int start;
@@ -32,7 +29,7 @@ public class streamingOccupancy {
     public static List<Integer> labels = new ArrayList<>();
     public static Map<String, Integer> hm = new HashMap<String, Integer>();
     public static Map<Pair<Integer, Integer>, Double> map = new HashMap<Pair<Integer, Integer>, Double>();//map the similarity to edge, for test purpose
-    public static List<String> wifiAPs = new ArrayList<>();
+    
 
     public static void readGraph(){
         try {
@@ -40,8 +37,6 @@ public class streamingOccupancy {
             Scanner src = new Scanner(fin);
             FileReader finLabel = new FileReader(clusterLabelFile);
             Scanner srcL = new Scanner(finLabel);
-            FileReader finAP = new FileReader(wifiAPFile);
-            Scanner srcAP = new Scanner(finAP);
             String line;
             //read nodes
             while(src.hasNext()){
@@ -65,13 +60,8 @@ public class streamingOccupancy {
             while(srcL.hasNext()){
                 labels.add(srcL.nextInt());
             }
-            //read wifiAPs
-            while(srcAP.hasNext()){
-                wifiAPs.add(srcAP.nextLine());
-            }
             fin.close();
             finLabel.close();
-            finAP.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
