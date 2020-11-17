@@ -27,7 +27,10 @@ import edu.uci.ics.deid.model.RawConnectionEventMsg;
 import java.time.Duration;
 import java.time.Instant;
 
-public class OccupancyAnalysis{
+public class OccupancyAnalysis implements DisposableBean, Runnable {
+
+    private Thread thread;
+    private volatile boolean running; 
 
     @Value("${occupancy.parameter.interval}")
     private Long interval;
@@ -50,10 +53,10 @@ public class OccupancyAnalysis{
     private Duration timeElapsed;
 
     public void run(){
+        RawConnectionEvent evt = null;
         lastTimestamp = Instant.now();
         streamingOccupancy.readGraph();
-        while(true){
-            RawConnectionEvent evt;
+        while(this.running){
             //read event from queue
             try {
                 evt = recvQueue.take();
