@@ -10,11 +10,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OccupancyTest {
+
+    List<String> sequentialMacs = new ArrayList<>();
+    
     public static void main(String[] args) {
         //clustering.readEdge();
         //clustering.clusterMerge();
         //clustering.writeToFile();
-        List<String> sequentialMacs = new ArrayList<>();
         streamingOccupancy.readGraph();
         streamingOccupancy.clusterAnslysis();
     }

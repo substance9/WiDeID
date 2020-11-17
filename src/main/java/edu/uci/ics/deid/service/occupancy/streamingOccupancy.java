@@ -5,6 +5,8 @@ import java.util.List;
 import java.io.*;
 import java.util.*;
 import javafx.util.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class streamingOccupancy {
 
@@ -13,6 +15,7 @@ public class streamingOccupancy {
 
     @Value("${occupancy.input_data.cluterLabel}")
     private static String clusterLabelFile;
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public static class EDGE {
         int start;
@@ -33,6 +36,7 @@ public class streamingOccupancy {
 
     public static void readGraph(){
         try {
+            System.out.println("graphFile: " + graphFile);
             FileReader fin = new FileReader(graphFile);
             Scanner src = new Scanner(fin);
             FileReader finLabel = new FileReader(clusterLabelFile);

@@ -53,6 +53,11 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     private Instant currentTimestamp;
     private Duration timeElapsed;
 
+    public OccupancyAnalysis(){
+        this.thread = new Thread(this);
+    }
+
+    @Override
     public void run(){
         RawConnectionEvent evt = null;
         lastTimestamp = Instant.now();
