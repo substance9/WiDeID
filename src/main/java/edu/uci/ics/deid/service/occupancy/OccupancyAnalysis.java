@@ -22,6 +22,9 @@ import edu.uci.ics.deid.model.Occupancy;
 import edu.uci.ics.deid.model.OccupancyUnit;
 import edu.uci.ics.deid.model.RawConnectionEvent;
 import edu.uci.ics.deid.model.RawConnectionEventMsg;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 
 import java.time.Duration;
@@ -65,15 +68,12 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     private Timestamp currentTimestamp;
     private long timeElapsed;
 
-    //DateTimeFormatter formatter = new SimpleDateFormat("HH");//extract hour from date
-
     public OccupancyAnalysis(){
         this.thread = new Thread(this);
     }
 
     @Autowired
     streamingOccupancy SO;
-    //streamingOccupancy SO = new streamingOccupancy();
 
     //for testing 
     private boolean flag = false;
@@ -101,6 +101,25 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         
     }*/
 
+    public String SHA1Mac(String input)
+    {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+            byte[] messageDigest = md.digest(input.getBytes());
+            BigInteger no = new BigInteger(1, messageDigest);
+            String hashtext = no.toString(16);
+
+            // Add preceding 0s to make it 32 bit
+            while (hashtext.length() < 32) {
+                hashtext = "0" + hashtext;
+            }
+            return hashtext;
+        }
+        catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void mapAP(){
         //read required AP from files
         try {
@@ -127,7 +146,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         System.out.println("event info: " + evt.getTimestamp() + " " + evt.getApId() + " " + evt.getClientMac().getMacAddrStr());
         String ap = evt.getApId();
         if(aps.contains(ap)){//is target ap
-            String clientMac = evt.getClientMac().getMacAddrStr();
+            String clientMac = SHA1Mac(evt.getClientMac().getMacAddrStr());
             if(!apEvents.containsKey(ap)){
                 List<String> macs = new ArrayList<>();
                 macs.add(clientMac);
