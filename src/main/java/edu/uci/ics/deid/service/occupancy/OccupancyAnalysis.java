@@ -1,7 +1,7 @@
 package edu.uci.ics.deid.service.occupancy;
 
 import java.io.IOException;
-
+import java.sql.Timestamp;
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +34,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     private volatile boolean running; 
 
     @Value("${occupancy.parameter.interval}")
-    private Long interval;
+    private double interval;
 
     @Value("${occupancy.input_data.WiFiAPs}")
     private String wifiAPFile;
@@ -45,20 +45,25 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     @Value("${occupancy.parameter.staticEnd}")
     private Integer staticEnd;
 
+    @Value("${occupancy.input_data.deviceGraph}")
+    private String graphFile;
+
+    @Value("${occupancy.input_data.cluterLabel}")
+    private String clusterLabelFile;
+
     @Autowired
     RawEventRecvQueue recvQueue;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    List<ArrayList<String>> events = new ArrayList<ArrayList<String>>();
-    Map<String, Integer> hm = new HashMap<String, Integer>();
-    Map<Integer, String> rehm = new HashMap<Integer, String>();
+    
+    Map<String, List<String>> apEvents = new HashMap<String, List<String>>();
     Map<String, Integer> staticDevice = new HashMap<String, Integer>();
     List<String> aps = new ArrayList<>();
 
-    private Instant lastTimestamp;
-    private Instant currentTimestamp;
-    private Duration timeElapsed;
+    private Timestamp lastTimestamp;
+    private Timestamp currentTimestamp;
+    private long timeElapsed;
 
     //DateTimeFormatter formatter = new SimpleDateFormat("HH");//extract hour from date
 
@@ -70,11 +75,16 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     streamingOccupancy SO;
     //streamingOccupancy SO = new streamingOccupancy();
 
+    //for testing 
+    private boolean flag = false;
+
     @Override
     public void run(){
         RawConnectionEvent evt = null;
-        lastTimestamp = Instant.now();
-        SO.readGraph();
+        //lastTimestamp = new Timestamp(System.currentTimeMillis());//modify to first event for testing
+        SO.readGraph(graphFile, clusterLabelFile);
+        mapAP();
+
         while(this.running){
             //read event from queue
             try {
@@ -88,17 +98,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     }
 
     /*public void filterStaticDevice(RawConnectionEvent evt){
-        Date nowDate = Date.from(evt.getTimestamp().toInstant());
-        String hour = formatter.format(nowDate);
-        String mac = evt.getClientMac();
-        if(Integer.valueOf(hour) >= staticStart && Integer.valueOf(hour) <= staticEnd){
-            if(!staticDevice.containsKey(mac)){//add a new device
-                staticDevice.put(mac, 0);
-            }
-            else{//update count
-
-            }
-        }
+        
     }*/
 
     public void mapAP(){
@@ -107,13 +107,9 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
             FileReader fin = new FileReader(wifiAPFile);
             Scanner src = new Scanner(fin);
             String line;
-            int id=0;
             while(src.hasNext()){
                 line = src.next();
                 aps.add(line);
-                hm.put(line,id);
-                rehm.put(id, line);
-                id++;
             }
             fin.close();
         } catch (IOException e) {
@@ -122,47 +118,60 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     }
 
     public void assignEvent(RawConnectionEvent evt){
+        //for testing 
+        if(!flag){
+            lastTimestamp = evt.getTimestamp();
+            flag = true;
+        }
 
-        int id = hm.get(evt.getApId());//get id of ap
-        currentTimestamp = evt.getTimestamp().toInstant();
-        events.get(id).add(evt.getApMac().toString());
-        logger.debug("current timestamp: " + currentTimestamp + " last timestamp: " + lastTimestamp);
-        timeElapsed = Duration.between(lastTimestamp, currentTimestamp);
-
-        if(timeElapsed.toSeconds() > interval*60){
-            //compute occupancy: run async
-            computeOccupancy(events, currentTimestamp);
-            //clear current list
-            for(int i=0;i<events.size();i++){
-                events.get(i).clear();
+        System.out.println("event info: " + evt.getTimestamp() + " " + evt.getApId() + " " + evt.getClientMac().getMacAddrStr());
+        String ap = evt.getApId();
+        if(aps.contains(ap)){//is target ap
+            String clientMac = evt.getClientMac().getMacAddrStr();
+            if(!apEvents.containsKey(ap)){
+                List<String> macs = new ArrayList<>();
+                macs.add(clientMac);
+                apEvents.put(ap, macs);
             }
+            else{
+                apEvents.get(ap).add(clientMac);
+            }
+        }
+
+        currentTimestamp = evt.getTimestamp();
+        timeElapsed = currentTimestamp.getTime() - lastTimestamp.getTime();//milliseconds = 0.001 second
+        if(timeElapsed > interval*60*1000){
+            computeOccupancy(currentTimestamp);
+            //clear current list
+            apEvents.clear();
             //update timeStamp
             lastTimestamp = currentTimestamp;
         }
     }
 
-    public void computeOccupancy(List<ArrayList<String>> events, Instant currentTimestamp2){//to change it using a thread
-        logger.debug("current timestamp: "+ currentTimestamp2);
-
+    public void computeOccupancy(Timestamp currentTimestamp){
         Occupancy occupancyOutput = new Occupancy();
-        occupancyOutput.setTimeStamp(currentTimestamp2.toString());
-        for(int i=0;i<events.size();i++){
-            OccupancyUnit occu = new OccupancyUnit();
-            occu.setApid(rehm.get(i));
-            occu.setCount(SO.computeOccupancy(events.get(i)));
-            occupancyOutput.getOccupancyArray().add(occu);
-        }
-        try {
-            //sendQueue.put(occupancyOutput);
-            logger.debug("Try to send a occupancy output");
-            logger.debug("timestamp: " + occupancyOutput.getTimeStamp());
-            for(int i=0;i<occupancyOutput.getOccupancyArray().size();i++){
-                logger.debug("ap_id: " + occupancyOutput.getOccupancyArray().get(i).getApid() + " Count: " + occupancyOutput.getOccupancyArray().get(i).getCount());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        List<OccupancyUnit> occus = new ArrayList<>();
+        occupancyOutput.setTimeStamp(currentTimestamp.toLocalDateTime().toString());
 
+        for(int i=0;i<aps.size();i++){
+            OccupancyUnit occu = new OccupancyUnit();
+            int count = 0;
+            String ap = aps.get(i);
+            occu.setApid(ap);
+            if(apEvents.containsKey(ap)){
+                count = SO.computeOccupancy(apEvents.get(ap));
+            }
+            occu.setCount(count);
+            occus.add(occu);
+        }
+        occupancyOutput.setOccupancyArray(occus);
+
+        /*logger.debug("Try to send a occupancy output");
+        logger.debug("timestamp: " + occupancyOutput.getTimeStamp());
+        for(int i=0;i<occupancyOutput.getOccupancyArray().size();i++){
+            logger.debug("ap_id: " + occupancyOutput.getOccupancyArray().get(i).getApid() + " Count: " + occupancyOutput.getOccupancyArray().get(i).getCount());
+        }*/
     }
 
     @Override

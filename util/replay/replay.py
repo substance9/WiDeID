@@ -6,7 +6,7 @@ HISTORY_DATA_FILE = "DBH_AP_SNMP.2018-06-11"
 
 DESTINATION_PIPE_LOCATION = "../pipe2"
 
-EVENT_INTERVAL_SEC = 1 
+EVENT_INTERVAL_SEC = 0.1 #adjust the number of events per second, 0.01 -> 100 events per second
 
 def replay(origin_data_file_d, destination_file_d):
     for line in origin_data_file_d:

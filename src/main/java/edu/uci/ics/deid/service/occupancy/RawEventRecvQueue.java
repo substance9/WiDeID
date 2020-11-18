@@ -17,13 +17,13 @@ public class RawEventRecvQueue {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public RawEventRecvQueue() {
-        rQueue = new ArrayBlockingQueue<>(1024);
+        rQueue = new ArrayBlockingQueue<>(1024);//size of queue#ihe
     }
 
     public void put(RawConnectionEvent evt) {
         try {
             rQueue.put(evt);
-            logger.debug("RecvQueue Len: {}", rQueue.size());
+            //logger.debug("RecvQueue Len: {}", rQueue.size());
         } catch (Exception e){
             e.printStackTrace();
         }

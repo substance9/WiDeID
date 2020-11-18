@@ -13,11 +13,6 @@ import org.slf4j.LoggerFactory;
 @Component
 public class streamingOccupancy {
 
-    @Value("${occupancy.input_data.deviceGraph}")
-    private String graphFile;
-
-    @Value("${occupancy.input_data.cluterLabel}")
-    private String clusterLabelFile;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public class EDGE {
@@ -37,9 +32,8 @@ public class streamingOccupancy {
     public Map<Pair<Integer, Integer>, Double> map = new HashMap<Pair<Integer, Integer>, Double>();//map the similarity to edge, for test purpose
     
 
-    public void readGraph(){
+    public void readGraph(String graphFile, String clusterLabelFile){
         try {
-            System.out.println("====================graphFile: " + graphFile);
             FileReader fin = new FileReader(graphFile);
             Scanner src = new Scanner(fin);
             FileReader finLabel = new FileReader(clusterLabelFile);
@@ -69,6 +63,8 @@ public class streamingOccupancy {
             }
             fin.close();
             finLabel.close();
+            src.close();
+            srcL.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -79,17 +75,25 @@ public class streamingOccupancy {
     }
 
     public int findCluster(String macAddress){
-        return hm.get(macAddress);
+        if(!hm.containsKey(macAddress)){
+            return macAddress.hashCode();
+        }
+        else{
+            return hm.get(macAddress);
+        }
     }
 
     public int computeOccupancy(List<String> sequentialMacs){
-        int occupancy = 0;
-        Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+        int occupancy = sequentialMacs.size();
+        Map<Integer, Integer> mp = new HashMap<Integer, Integer>();//find dinstinct cluster
         for(int i=0;i<sequentialMacs.size();i++){
             int id = findCluster(sequentialMacs.get(i));
-            if(!map.containsKey(id)){
-                map.put(id,occupancy++);
+            if(mp.containsKey(id)){
+                mp.put(id,occupancy--);
             }
+        }
+        if(occupancy < 0){
+            occupancy = 0;
         }
         return occupancy;
     }
