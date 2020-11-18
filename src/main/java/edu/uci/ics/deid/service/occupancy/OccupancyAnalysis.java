@@ -120,32 +120,13 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     }
 
     public void updateStaticDeviceWeekly(RawConnectionEvent evt){
-        if((evt.getTimestamp().getTime() - lastTimestamp.getTime()) >= updateInterval*24*60*60*1000){
+        if((evt.getTimestamp().getTime() - lastWeekTimestamp.getTime()) >= updateInterval*24*60*60*1000){
             for(Map.Entry<String, Integer> entry : staticDevice.entrySet()){
                 if(entry.getValue() < staticDeviceThreshold){
                     staticDevice.remove(entry.getKey());
                 }
             }
-            lastTimestamp = evt.getTimestamp();
-        }
-    }
-
-    public String SHA1Mac(String input)
-    {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-1");
-            byte[] messageDigest = md.digest(input.getBytes());
-            BigInteger no = new BigInteger(1, messageDigest);
-            String hashtext = no.toString(16);
-
-            // Add preceding 0s to make it 32 bit
-            while (hashtext.length() < 32) {
-                hashtext = "0" + hashtext;
-            }
-            return hashtext;
-        }
-        catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
+            lastWeekTimestamp = evt.getTimestamp();
         }
     }
 
@@ -192,7 +173,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         currentTimestamp = evt.getTimestamp();
         timeElapsed = currentTimestamp.getTime() - lastTimestamp.getTime();//milliseconds = 0.001 second
         if(timeElapsed > interval*60*1000){
-            computeOccupancy(currentTimestamp);
+            computeOccupancy();
             //clear current list
             apEvents.clear();
             //update timeStamp
@@ -200,10 +181,11 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         }
     }
 
-    public void computeOccupancy(Timestamp currentTimestamp){
+    public void computeOccupancy(){
         Occupancy occupancyOutput = new Occupancy();
         List<OccupancyUnit> occus = new ArrayList<>();
-        occupancyOutput.setTimeStamp(currentTimestamp.toLocalDateTime().toString());
+        occupancyOutput.setStartTimeStamp(lastTimestamp);
+        occupancyOutput.setEndTimeStamp(currentTimestamp);
 
         for(int i=0;i<aps.size();i++){
             OccupancyUnit occu = new OccupancyUnit();
