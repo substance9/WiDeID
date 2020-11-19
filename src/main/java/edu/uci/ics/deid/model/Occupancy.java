@@ -8,7 +8,7 @@ public class Occupancy {
     Timestamp startTimeStamp;
     Timestamp endTimeStamp;
 
-    public getStartTimeStamp() {
+    public Timestamp getStartTimeStamp() {
         return this.startTimeStamp;
     }
 
@@ -16,7 +16,7 @@ public class Occupancy {
         this.startTimeStamp = startTimeStamp;
     }
 
-    public getEndTimeStamp() {
+    public Timestamp getEndTimeStamp() {
         return this.endTimeStamp;
     }
 

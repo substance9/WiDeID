@@ -63,6 +63,9 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     @Autowired
     RawEventRecvQueue recvQueue;
 
+    @Autowired
+    OccupancySendQueue sendQueue; 
+
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     
@@ -199,6 +202,8 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
             occus.add(occu);
         }
         occupancyOutput.setOccupancyArray(occus);
+
+        sendQueue.put(occupancyOutput);
 
         /*logger.debug("Try to send a occupancy output");
         logger.debug("timestamp: " + occupancyOutput.getTimeStamp());
