@@ -17,6 +17,7 @@ import org.zeromq.ZMQ;
 
 import edu.uci.ics.deid.model.Occupancy;
 import edu.uci.ics.deid.model.OccupancyUnit;
+import edu.uci.ics.deid.model.EncryptedDispatchingMsg;
 import edu.uci.ics.deid.util.AES;
 
 @Component
@@ -78,7 +79,7 @@ public class OccupancyDispatcher implements DisposableBean, Runnable {
             String encBodyStr = "";
              
             try {
-                encBodyStr = AES.encrypt(mapper.writeValueAsString(evtMsg), secret, generatedString);
+                encBodyStr = AES.encrypt(mapper.writeValueAsString(evt), secret, generatedString);
             } catch (JsonProcessingException e1) {
                 e1.printStackTrace();
             }

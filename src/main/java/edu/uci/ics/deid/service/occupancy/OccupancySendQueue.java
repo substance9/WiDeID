@@ -17,11 +17,11 @@ public class OccupancySendQueue {
     //Logging
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public DeidConnectionEventSendQueue() {
+    public OccupancySendQueue() {
         sQueue = new ArrayBlockingQueue<>(1024);
     }
 
-    public void put(DeidConnectionEvent evt) {
+    public void put(Occupancy evt) {
         try {
             sQueue.put(evt);
             //logger.debug("SendQueue Len: {}", sQueue.size());
@@ -30,8 +30,8 @@ public class OccupancySendQueue {
         }
     }
 
-    public DeidConnectionEvent take() {
-        DeidConnectionEvent evt = null;
+    public Occupancy take() {
+        Occupancy evt = null;
         try {
             evt = sQueue.take();
             return evt;
