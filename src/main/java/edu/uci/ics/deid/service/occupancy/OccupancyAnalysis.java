@@ -100,6 +100,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
             //read event from queue
             try {
                 evt = recvQueue.take();
+                System.out.println("event info: " + evt.getTimestamp() + " " + evt.getApId() + " " + evt.getClientMac().getMacAddrStr());
                 filterStaticDevice(evt);
                 assignEvent(evt);
                 updateStaticDeviceWeekly(evt);
@@ -141,7 +142,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
             String line;
             while(src.hasNext()){
                 line = src.next();
-                aps.add(line);
+                aps.add(line.substring(1,line.length()-1));//remove quote
             }
             fin.close();
         } catch (IOException e) {
@@ -156,7 +157,6 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
             flag = true;
         }
 
-        System.out.println("event info: " + evt.getTimestamp() + " " + evt.getApId() + " " + evt.getClientMac().getMacAddrStr());
         String ap = evt.getApId();
         String clientMac = evt.getClientMac().getInitHashId();
 
@@ -185,6 +185,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     }
 
     public void computeOccupancy(){
+        //System.out.println("timestamps: "+ lastTimestamp + " " + currentTimestamp);
         Occupancy occupancyOutput = new Occupancy();
         List<OccupancyUnit> occus = new ArrayList<>();
         occupancyOutput.setStartTimeStamp(lastTimestamp);
@@ -206,7 +207,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         sendQueue.put(occupancyOutput);
 
         /*logger.debug("Try to send a occupancy output");
-        logger.debug("timestamp: " + occupancyOutput.getTimeStamp());
+        System.out.println(occupancyOutput.getStartTimeStamp() + " " + occupancyOutput.getEndTimeStamp());
         for(int i=0;i<occupancyOutput.getOccupancyArray().size();i++){
             logger.debug("ap_id: " + occupancyOutput.getOccupancyArray().get(i).getApid() + " Count: " + occupancyOutput.getOccupancyArray().get(i).getCount());
         }*/

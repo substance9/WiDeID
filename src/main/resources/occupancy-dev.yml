@@ -22,3 +22,7 @@ occupancy:
     updateInterval: 7 #the interval to update staticDevices 
     staticDeviceThreshold: 20
 
+tippers_dispatcher:
+  secret: occupancyisimportant
+  port: 6666
+
