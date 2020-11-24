@@ -79,6 +79,7 @@ public class DeviceFilter implements DisposableBean, Runnable {
             }
             numMsgReceived++;
 
+
             //2. Parse the event line
             try{
                 rawEvt = parser.parse(evtStr);
@@ -93,38 +94,42 @@ public class DeviceFilter implements DisposableBean, Runnable {
                 continue;
             }
 
-            //3. Check Filter Policies
-            optOutDevFilter.setEventForChecking(rawEvt);
-            Future<Boolean> result1 = optOutFilterExecutor.submit(optOutDevFilter);
+            //For Finder testing, not used in  production
+            sendQueue.put(rawEvt);
+            numMsgForwarded++;
 
-            boolean forwardingDecision1 = false;
-            try{
-                forwardingDecision1 = result1.get();
-            }catch (InterruptedException|ExecutionException e) {
-                logger.error("Error when try to get result from opt-out filter");
-                e.printStackTrace();
-            }
+            // //3. Check Filter Policies
+            // optOutDevFilter.setEventForChecking(rawEvt);
+            // Future<Boolean> result1 = optOutFilterExecutor.submit(optOutDevFilter);
 
-            boolean discardFlag = false;
-            String discardReasons = "";
+            // boolean forwardingDecision1 = false;
+            // try{
+            //     forwardingDecision1 = result1.get();
+            // }catch (InterruptedException|ExecutionException e) {
+            //     logger.error("Error when try to get result from opt-out filter");
+            //     e.printStackTrace();
+            // }
 
-            if (forwardingDecision1 == false){
-                discardFlag = true;
-                discardReasons += optOutDevFilter.getFilterReason();
-            }
+            // boolean discardFlag = false;
+            // String discardReasons = "";
 
-            if(discardFlag == false){
-                sendQueue.put(rawEvt);
-                numMsgForwarded++;
-            }
-            else{
-                //Discard the data and generate the log for attestation in the future
-                filterLog = new DeviceFilterLog(rawEvt, discardReasons);
-                logQueue.put(filterLog);
-                logger.debug("Device " + rawEvt.getClientMac().getMacAddrStr() + " is opted-out device, Discard data.");
-                numMsgDiscarded++;
-                continue;
-            }
+            // if (forwardingDecision1 == false){
+            //     discardFlag = true;
+            //     discardReasons += optOutDevFilter.getFilterReason();
+            // }
+
+            // if(discardFlag == false){
+                
+            //     numMsgForwarded++;
+            // }
+            // else{
+            //     //Discard the data and generate the log for attestation in the future
+            //     filterLog = new DeviceFilterLog(rawEvt, discardReasons);
+            //     logQueue.put(filterLog);
+            //     logger.debug("Device " + rawEvt.getClientMac().getMacAddrStr() + " is opted-out device, Discard data.");
+            //     numMsgDiscarded++;
+            //     continue;
+            // }
             
         }
     }
