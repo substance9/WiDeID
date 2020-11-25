@@ -100,7 +100,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
             //read event from queue
             try {
                 evt = recvQueue.take();
-                System.out.println("event info: " + evt.getTimestamp() + " " + evt.getApId() + " " + evt.getClientMac().getMacAddrStr());
+                //System.out.println("event info: " + evt.getTimestamp() + " " + evt.getApId() + " " + evt.getClientMac().getMacAddrStr());
                 filterStaticDevice(evt);
                 assignEvent(evt);
                 updateStaticDeviceWeekly(evt);

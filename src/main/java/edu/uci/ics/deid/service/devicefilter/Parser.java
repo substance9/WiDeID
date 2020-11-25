@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import java.io.*;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -51,6 +52,7 @@ public class Parser {
         RawConnectionEvent rawEvt = new RawConnectionEvent();
         HashMap<String, String> rawDict = new HashMap<String, String>();
 
+
         // First split the event string line into different attribute pieces. The splitter is tab character.
         String[] evtStrArray = evtStr.split("\t");
 //        for (String s : evtStrArray){
@@ -59,6 +61,11 @@ public class Parser {
 
         // Iterate through all attribute pieces, each attribute is a string that represents key value pair connected by "="
         // keyValStr example:  SNMPv2-SMI::enterprises.14179.2.6.2.36.0 = INTEGER: 0
+
+        //ihe: for testing, remove it on the OIT side
+        Timestamp timestamp = Timestamp.valueOf(evtStr.substring(0,26));//read time
+        rawEvt.setTimestamp(timestamp);
+
         for (String keyValStr : evtStrArray){
             keyValStr = keyValStr.trim();
 
