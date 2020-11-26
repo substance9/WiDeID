@@ -1,8 +1,9 @@
 import os
 import time
 
-HISTORY_DATA_DIR = './history_data/'
-HISTORY_DATA_FILE = "DBH_AP_SNMP.2018-06-11"
+#HISTORY_DATA_DIR = './history_data/'  
+HISTORY_DATA_DIR ='/Users/linyiming/Documents/research/Occupancy/data/'
+HISTORY_DATA_FILE = "DBH_AP_SNMP.2018-10-22"
 
 DESTINATION_PIPE_LOCATION = "../pipe2"
 DESTINATION_TESTING = "output"

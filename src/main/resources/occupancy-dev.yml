@@ -14,9 +14,9 @@ occupancy:
   input_data:
     deviceGraph: ./util/denseGraph.txt
     cluterLabel: ./util/clusterMergeLabel.txt
-    WiFiAPs: ./util/wifiAPs.txt
+    spaceMetadata: ./util/spaceMetadata.csv
   parameter:
-    interval: 5 #window size
+    interval: 10 #window size
     staticStart: 2 #2am
     staticEnd: 6 #6am
     updateInterval: 7 #the interval to update staticDevices 
