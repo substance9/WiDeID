@@ -71,12 +71,12 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     
-    Map<String, List<Integer>> apEvents = new HashMap<String, List<Integer>>();
+    Map<String, List<Integer>> apEvents = new HashMap<String, List<Integer>>();//ap_name to events array list; for semantic location: string(space_id) to events array list
     Map<Integer, Integer> spaceIDIndex = new HashMap<Integer, Integer>();
 
     Map<String, Integer> staticDevice = new HashMap<String, Integer>();
     List<Space> spaces = new ArrayList<>();
-    List<String> aps = new ArrayList<>();
+    List<String> aps = new ArrayList<>();//wifi aps for all room/region location
 
     private Timestamp lastWeekTimestamp;//use to update staticDevices weekly
     private Timestamp lastTimestamp;
@@ -218,7 +218,6 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     }
 
     public void computeOccupancy(){
-        //System.out.println("timestamps: "+ lastTimestamp + " " + currentTimestamp);
         Occupancy occupancyOutput = new Occupancy();
         List<OccupancyUnit> occus = new ArrayList<>();
         occupancyOutput.setStartTimeStamp(lastTimestamp);
@@ -254,12 +253,13 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
             if(spaces.get(i).getSpace_type().equals("Floor")){
                 OccupancyUnit occu = new OccupancyUnit();
                 int count = 0;
+                String space_id = String.valueOf(spaces.get(i).getSpace_id());
                 String ap = spaces.get(i).getAp_name();
                 occu.setApid(ap);
                 occu.setSpaceid(spaces.get(i).getSpace_id());
-                if(apEvents.containsKey(ap)){
+                if(apEvents.containsKey(space_id)){
                     //slim list
-                    Set<Integer> uniqueINT = new HashSet<Integer>(apEvents.get(ap));
+                    Set<Integer> uniqueINT = new HashSet<Integer>(apEvents.get(space_id));
                     List<Integer> slimList = new ArrayList<>();
                     slimList.addAll(uniqueINT);
                     //get occupancy as the number of distinct macs
@@ -276,12 +276,14 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
             if(spaces.get(i).getSpace_type().equals("Building")){
                 OccupancyUnit occu = new OccupancyUnit();
                 int count = 0;
+                String space_id = String.valueOf(spaces.get(i).getSpace_id());
                 String ap = spaces.get(i).getAp_name();
                 occu.setApid(ap);
                 occu.setSpaceid(spaces.get(i).getSpace_id());
-                if(apEvents.containsKey(ap)){
+                
+                if(apEvents.containsKey(space_id)){
                     //slim list
-                    Set<Integer> uniqueINT = new HashSet<Integer>(apEvents.get(ap));
+                    Set<Integer> uniqueINT = new HashSet<Integer>(apEvents.get(space_id));
                     //get occupancy as the number of distinct macs
                     count = uniqueINT.size();
                 }
@@ -310,7 +312,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         else if(spaces.get(spaceIndex).getSpace_type().equals("Floor")){
             fatherNode = spaces.get(spaceIndex).getBuilding_id();
         }
-        String fatherName = spaces.get(spaceIDIndex.get(fatherNode)).getAp_name();
+        String fatherName = String.valueOf(fatherNode);
         if(!apEvents.containsKey(fatherName)){
             apEvents.put(fatherName, slimArray);
         }

@@ -4,6 +4,8 @@ import time
 #HISTORY_DATA_DIR = './history_data/'  
 HISTORY_DATA_DIR ='/Users/linyiming/Documents/research/Occupancy/data/'
 HISTORY_DATA_FILE = "DBH_AP_SNMP.2018-10-22"
+HISTORY_DATA_FILE1 = "DBH_AP_SNMP.2018-10-23"
+HISTORY_DATA_FILE2 = "DBH_AP_SNMP.2018-10-24"
 
 DESTINATION_PIPE_LOCATION = "../pipe2"
 DESTINATION_TESTING = "output"
@@ -33,6 +35,23 @@ def main():
                     replay(origin_file_d, destination_file_d)
 
                 print("Done")
+
+            if filename == HISTORY_DATA_FILE1:
+                print("Replaying:" + str(os.path.join(HISTORY_DATA_DIR, filename)))
+                origin_data_file = os.path.join(HISTORY_DATA_DIR, filename)
+                with open(origin_data_file, 'r') as origin_file_d:
+                    replay(origin_file_d, destination_file_d)
+
+                print("Done")
+
+            if filename == HISTORY_DATA_FILE2:
+                print("Replaying:" + str(os.path.join(HISTORY_DATA_DIR, filename)))
+                origin_data_file = os.path.join(HISTORY_DATA_DIR, filename)
+                with open(origin_data_file, 'r') as origin_file_d:
+                    replay(origin_file_d, destination_file_d)
+
+                print("Done")
+            
             else:
                 continue
 
