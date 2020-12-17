@@ -2,25 +2,34 @@ package edu.uci.ics.deid.model;
 
 public class Space {
     int space_id;
-    String ap_name;
+    String name;
     String space_type;
     int building_id;
     int floor_id;
+    int region_id;//for semantic location
 
     public int getSpace_id() {
         return this.space_id;
+    }
+
+    public int getRegion_id() {
+        return this.region_id;
     }
 
     public void setSpace_id(int space_id) {
         this.space_id = space_id;
     }
 
-    public String getAp_name() {
-        return this.ap_name;
+    public void setRegion_id(int region_id) {
+        this.region_id = region_id;
     }
 
-    public void setAp_name(String ap_name) {
-        this.ap_name = ap_name;
+    public String getName() {
+        return this.name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getSpace_type() {

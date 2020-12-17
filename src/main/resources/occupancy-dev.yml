@@ -15,11 +15,14 @@ occupancy:
     deviceGraph: ./util/denseGraph.txt
     cluterLabel: ./util/clusterMergeLabel.txt
     spaceMetadata: ./util/spaceMetadata.csv
+    overlappingRegion: ./util/overlappingRegions.txt
+    staticDevice: ./util/staticDevices.txt
   parameter:
     interval: 5 #window size
     staticStart: 2 #2am
     staticEnd: 6 #6am
     updateInterval: 7 #the interval to update staticDevices 
+    staticFlushToDeviceInterval: 1
     staticDeviceThreshold: 20
 
 tippers_dispatcher:

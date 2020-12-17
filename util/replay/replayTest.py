@@ -35,22 +35,6 @@ def main():
                     replay(origin_file_d, destination_file_d)
 
                 print("Done")
-
-            if filename == HISTORY_DATA_FILE1:
-                print("Replaying:" + str(os.path.join(HISTORY_DATA_DIR, filename)))
-                origin_data_file = os.path.join(HISTORY_DATA_DIR, filename)
-                with open(origin_data_file, 'r') as origin_file_d:
-                    replay(origin_file_d, destination_file_d)
-
-                print("Done")
-
-            if filename == HISTORY_DATA_FILE2:
-                print("Replaying:" + str(os.path.join(HISTORY_DATA_DIR, filename)))
-                origin_data_file = os.path.join(HISTORY_DATA_DIR, filename)
-                with open(origin_data_file, 'r') as origin_file_d:
-                    replay(origin_file_d, destination_file_d)
-
-                print("Done")
             
             else:
                 continue
