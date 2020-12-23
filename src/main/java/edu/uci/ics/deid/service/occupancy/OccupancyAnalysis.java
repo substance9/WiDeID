@@ -3,7 +3,7 @@ package edu.uci.ics.deid.service.occupancy;
 import java.io.IOException;
 import java.sql.Timestamp;
 import javax.annotation.PostConstruct;
-
+import java.lang.Math; 
 import java.util.ArrayList;
 import java.util.List;
 import java.io.*;
@@ -87,15 +87,16 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
 
     Map<String, Integer> staticDevice = new HashMap<String, Integer>();//store only the static devices and its corresponding frequency
     List<Space> spaces = new ArrayList<>();
-    List<String> aps = new ArrayList<>();//wifi aps for all room/region location
-    Map<Integer, Pair<Integer, Double>> overlappingRegion = new HashMap<Integer, Pair<Integer, Double>>();//store data from overlappingRegions. Pair: (coverage_id, percentage)
+    Map<String, Integer> APID = new HashMap<String, Integer>();//(ap name, index of spaces array)
+    Map<Integer, Pair<Integer, Double>> overlappingRegion = new HashMap<Integer, Pair<Integer, Double>>();//store data from overlappingRegions. [coverage_id, Pair: (region_id, percentage)]
+    Map<Integer, Boolean> activeBuilding = new HashMap<Integer, Boolean>();//store those buildings which receive conectivity data
 
     private Timestamp lastWeekTimestamp;//use to update staticDevices weekly
     private Timestamp lastDayTimestamp;//use to flush staticDevices to disk weekly
     private Timestamp lastTimestamp;
     private Timestamp currentTimestamp;
     private long timeElapsed;
-    private bool readStaticDeviceFlag = false;//when first run codes, read static devices from files, and then set flag as true
+    private Boolean readStaticDeviceFlag = false;//when first run codes, read static devices from files, and then set flag as true
 
     public OccupancyAnalysis(){
         this.thread = new Thread(this);
@@ -114,7 +115,8 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         lastWeekTimestamp = new Timestamp(System.currentTimeMillis());
         SO.readGraph(graphFile, clusterLabelFile);
         readSpaceMetadata();
-        readStaticDevice();//ihe: test for running only first time
+        readOverlappingRegion();
+        //readStaticDevice();//ihe: test for running only first time
 
         while(this.running){
             //read event from queue
@@ -190,7 +192,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         int id = 0;
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(staticDeviceFile)))) {
             line=br.readLine();
-            if(l(line=br.readLine()) == null){//file is empty
+            if((line=br.readLine()) == null){//file is empty
                 return;
             }
             while ((line=br.readLine()) != null) {
@@ -205,61 +207,74 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
 
     public void readSpaceMetadata(){
         //read Space Metadata from files
+        //schema: space_id,space_name,type,floor_id,building_id,bbtlx,bbtly,bbbrx,bbbry
         String line = null;
         int id = 0;
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(spaceMetadata)))) {
             while ((line=br.readLine()) != null) {
-                String[] array = line.split(",");
+                String[] array = line.split(";");
                 List<String> str = Arrays.asList(array);
                 Space space = new Space();
                 space.setSpace_id(Integer.valueOf(str.get(0)));
-                space.setName(str.get(1).substring(1,str.get(1).length()-1));
-                space.setSpace_type(str.get(2).substring(1,str.get(2).length()-1));
+                space.setName(str.get(1));
+                space.setSpace_type(str.get(2));
+                //System.out.println(str.get(0) + " " + str.get(1) + " " + str.get(2) + " " + str.get(3));
                 if(str.get(3).equals("NULL")){
-                    space.setBuilding_id(-1);
-                }
-                else{
-                    space.setBuilding_id(Integer.valueOf(str.get(3)));
-                }
-                if(str.get(4).equals("NULL")){
                     space.setFloor_id(-1);
                 }
                 else{
-                    space.setFloor_id(Integer.valueOf(str.get(4)));
+                    space.setFloor_id(Integer.valueOf(str.get(3)));
                 }
-                if(space.getSpace_type().equals("Room")){
-                    aps.add(space.getName());
+                if(str.get(4).equals("NULL")){
+                    space.setBuilding_id(-1);
                 }
-                spaceIDIndex.put(space.getSpace_id(), id++);
+                else{
+                    space.setBuilding_id(Integer.valueOf(str.get(4)));
+                }
+                if(space.getSpace_type().equals("coverage")){
+                    APID.put(space.getName(), id);
+                }
+                double lx, ly, rx, ry;
+                lx = Double.valueOf(str.get(5));
+                ly = Double.valueOf(str.get(6));
+                rx = Double.valueOf(str.get(7));
+                ry = Double.valueOf(str.get(8));
+                space.setArea(Math.abs(lx-rx)*Math.abs(ly-ry));
+                spaceIDIndex.put(space.getSpace_id(), id);
+                id++;
                 spaces.add(space);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        
-        /*for(int i=0;i<aps.size();i++){
-            System.out.println(aps.get(i));
-        }
+        /*System.out.println(spaces.size());
+
         for(int i=0;i<spaces.size();i++){
-            System.out.print(spaces.get(i).getSpace_id() + " " + spaces.get(i).getName() + " " + spaces.get(i).getSpace_type() + " " + spaces.get(i).getBuilding_id() + " " + spaces.get(i).getFloor_id());
+            System.out.print(spaces.get(i).getSpace_id() + " " + spaces.get(i).getName() + " " + spaces.get(i).getSpace_type() + " " + spaces.get(i).getBuilding_id() + " " + spaces.get(i).getFloor_id() + " " + spaces.get(i).getArea());
             System.out.println("");
         }*/
     }
 
     public void readOverlappingRegion(){
         //read overlapping region from files
+        //region_id,coverage_id,area
         String line = null;
         int id = 0;
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(overlappingRegionFile)))) {
             while ((line=br.readLine()) != null) {
                 String[] array = line.split(",");
                 List<String> str = Arrays.asList(array);
-                overlappingRegion.put(Integer.valueOf(str.get(0)), new Pair(Integer.valueOf(str.get(1)), Double.valueOf(str.get(2))));
+                overlappingRegion.put(Integer.valueOf(str.get(1)), new Pair(Integer.valueOf(str.get(0)), Double.valueOf(str.get(2))));
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        /*for(Map.Entry<Integer, Pair<Integer, Double>> entry : overlappingRegion.entrySet()){
+            System.out.print(entry.getKey() + " " + entry.getValue().getKey() + " " + entry.getValue().getValue());
+            System.out.println("");
+        }*/
     }
 
     public void assignEvent(RawConnectionEvent evt){
@@ -272,8 +287,15 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         String ap = evt.getApId();
         String clientMac = evt.getClientMac().getInitHashId();
 
-        if(!staticDevice.containsKey(clientMac)){//not a static device
-            if(aps.contains(ap)){//is target ap
+        //udpate active buildings
+        if(APID.containsKey(ap)){//target ap
+            int space_index = APID.get(ap);
+            int building_id = spaces.get(space_index).getBuilding_id();
+            if(!activeBuilding.containsKey(building_id)){
+                activeBuilding.put(building_id, true);
+            }
+
+            if(!staticDevice.containsKey(clientMac)){//not a static device
                 if(!apEvents.containsKey(ap)){
                     List<Integer> macs = new ArrayList<>();
                     macs.add(SO.findCluster(clientMac));
@@ -284,7 +306,10 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
                 }
             }
         }
-        
+        else{
+            //System.out.println("Ap name in raw logs is inconsistent with metadata: " + ap);
+        }
+
         currentTimestamp = evt.getTimestamp();
         timeElapsed = currentTimestamp.getTime() - lastTimestamp.getTime();//milliseconds = 0.001 second
         
@@ -306,8 +331,13 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
 
         //for all physical regions
         for(int i=0;i<spaces.size();i++){
-            //only deal with physical regions
-            if(spaces.get(i).getSpace_type().equals("Floor") || spaces.get(i).getSpace_type().equals("Building")) {
+            //filter out those inactive space
+            if(!activeBuilding.containsKey(spaces.get(i).getBuilding_id())){
+                continue;
+            }
+
+            //only deal with physical regions: type, "coverage"
+            if(!spaces.get(i).getSpace_type().equals("coverage")) {
                 continue;
             }
             OccupancyUnit occu = new OccupancyUnit();
@@ -325,7 +355,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
                 //push up slimList to father node
                 MergeFatherNode(i,slimList);
                 //push up to semantic node
-                MergeSemanticNode(i, slimArray);
+                MergeSemanticNode(i, slimList);
             }
             occu.setCount(count);
             occus.add(occu);
@@ -333,7 +363,11 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
 
         //for all semantic locations
         for(int i=0;i<spaces.size();i++){
-            if(spaces.get(i).getSpace_type().equals("Region")){//ihe check name
+            //filter out those inactive space
+            if(!activeBuilding.containsKey(spaces.get(i).getBuilding_id())){
+                continue;
+            }
+            if(spaces.get(i).getSpace_type().equals("region")){//ihe check name
                 OccupancyUnit occu = new OccupancyUnit();
                 int count = 0;
                 String space_id = String.valueOf(spaces.get(i).getSpace_id());
@@ -355,7 +389,11 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
 
         //for all floors
         for(int i=0;i<spaces.size();i++){
-            if(spaces.get(i).getSpace_type().equals("Floor")){
+            //filter out those inactive space
+            if(!activeBuilding.containsKey(spaces.get(i).getBuilding_id())){
+                continue;
+            }
+            if(spaces.get(i).getSpace_type().equals("floor")){
                 OccupancyUnit occu = new OccupancyUnit();
                 int count = 0;
                 String space_id = String.valueOf(spaces.get(i).getSpace_id());
@@ -378,7 +416,11 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         }
         //for all buildings
         for(int i=0;i<spaces.size();i++){
-            if(spaces.get(i).getSpace_type().equals("Building")){
+            //filter out those inactive space
+            if(!activeBuilding.containsKey(spaces.get(i).getBuilding_id())){
+                continue;
+            }
+            if(spaces.get(i).getSpace_type().equals("building")){
                 OccupancyUnit occu = new OccupancyUnit();
                 int count = 0;
                 String space_id = String.valueOf(spaces.get(i).getSpace_id());
@@ -400,21 +442,21 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         occupancyOutput.setOccupancyArray(occus);
         sendQueue.put(occupancyOutput);
 
-        //System.out.println("static device number: " + staticDevice.size());
+        System.out.println(occupancyOutput.getOccupancyArray().size());
 
-        /*logger.debug("Try to send a occupancy output");
+        logger.debug("Try to send a occupancy output");
         System.out.println(occupancyOutput.getStartTimeStamp() + " " + occupancyOutput.getEndTimeStamp());
         for(int i=0;i<occupancyOutput.getOccupancyArray().size();i++){
             logger.debug("ap_id: " + occupancyOutput.getOccupancyArray().get(i).getApid() + " Count: " + occupancyOutput.getOccupancyArray().get(i).getCount());
-        }*/
+        }
     }
 
     public void MergeFatherNode(int spaceIndex, List<Integer> slimArray){//merge slim array of current node with#spaceIndex to its father
         int fatherNode = -1;
-        if(spaces.get(spaceIndex).getSpace_type().equals("Room")){
+        if(spaces.get(spaceIndex).getSpace_type().equals("coverage")){
             fatherNode = spaces.get(spaceIndex).getFloor_id();
         }
-        else if(spaces.get(spaceIndex).getSpace_type().equals("Floor")){
+        else if(spaces.get(spaceIndex).getSpace_type().equals("floor")){
             fatherNode = spaces.get(spaceIndex).getBuilding_id();
         }
         String fatherName = String.valueOf(fatherNode);
@@ -430,9 +472,12 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         int space_id = spaces.get(spaceIndex).getSpace_id();
         if(overlappingRegion.containsKey(space_id)){
             int region_id = overlappingRegion.get(space_id).getKey();
-            double percentage = overlappingRegion.get(space_id).getValue();
+            double overlapping_area = overlappingRegion.get(space_id).getValue();
             String region_name = String.valueOf(region_id);
-            if(percentage>=0.5){
+            int region_index = spaceIDIndex.get(region_id);
+            double area = spaces.get(region_index).getArea();
+            System.out.println("region_id: " + region_id + " region area: "  + area + " physical region id: " + space_id + " overlapping area: " + overlapping_area);
+            if((overlapping_area/area)>=0.5){
                 if(!apEvents.containsKey(region_name)){
                     apEvents.put(region_name, slimArray);
                 }

@@ -14,8 +14,8 @@ occupancy:
   input_data:
     deviceGraph: ./util/denseGraph.txt
     cluterLabel: ./util/clusterMergeLabel.txt
-    spaceMetadata: ./util/spaceMetadata.csv
-    overlappingRegion: ./util/overlappingRegions.txt
+    spaceMetadata: ./util/Full_Campus.csv
+    overlappingRegion: ./util/intersection_data.csv
     staticDevice: ./util/staticDevices.txt
   parameter:
     interval: 5 #window size

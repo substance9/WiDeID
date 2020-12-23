@@ -7,6 +7,7 @@ public class Space {
     int building_id;
     int floor_id;
     int region_id;//for semantic location
+    double area;
 
     public int getSpace_id() {
         return this.space_id;
@@ -14,6 +15,14 @@ public class Space {
 
     public int getRegion_id() {
         return this.region_id;
+    }
+
+    public double getArea(){
+        return this.area;
+    }
+
+    public void setArea(double area){
+        this.area = area;
     }
 
     public void setSpace_id(int space_id) {
