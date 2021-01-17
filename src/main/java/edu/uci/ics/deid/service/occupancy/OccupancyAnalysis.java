@@ -442,13 +442,13 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         occupancyOutput.setOccupancyArray(occus);
         sendQueue.put(occupancyOutput);
 
-        System.out.println(occupancyOutput.getOccupancyArray().size());
+        //System.out.println(occupancyOutput.getOccupancyArray().size());
 
-        logger.debug("Try to send a occupancy output");
+        /*logger.debug("Try to send a occupancy output");
         System.out.println(occupancyOutput.getStartTimeStamp() + " " + occupancyOutput.getEndTimeStamp());
         for(int i=0;i<occupancyOutput.getOccupancyArray().size();i++){
             logger.debug("ap_id: " + occupancyOutput.getOccupancyArray().get(i).getApid() + " Count: " + occupancyOutput.getOccupancyArray().get(i).getCount());
-        }
+        }*/
     }
 
     public void MergeFatherNode(int spaceIndex, List<Integer> slimArray){//merge slim array of current node with#spaceIndex to its father
@@ -476,7 +476,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
             String region_name = String.valueOf(region_id);
             int region_index = spaceIDIndex.get(region_id);
             double area = spaces.get(region_index).getArea();
-            System.out.println("region_id: " + region_id + " region area: "  + area + " physical region id: " + space_id + " overlapping area: " + overlapping_area);
+            //System.out.println("region_id: " + region_id + " region area: "  + area + " physical region id: " + space_id + " overlapping area: " + overlapping_area);
             if((overlapping_area/area)>=0.5){
                 if(!apEvents.containsKey(region_name)){
                     apEvents.put(region_name, slimArray);
