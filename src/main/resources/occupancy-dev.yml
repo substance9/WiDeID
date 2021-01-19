@@ -16,10 +16,11 @@ occupancy:
     cluterLabel: ./deid_occ_meta/clusterMergeLabel.txt
     WiFiAPs: ./deid_occ_meta/wifiAPs.txt
   parameter:
-    interval: 0.1 #window size
+    interval: 5 #window size
     staticStart: 2 #2am
     staticEnd: 6 #6am
     updateInterval: 7 #the interval to update staticDevices 
+    staticFlushToDeviceInterval: 1
     staticDeviceThreshold: 20
 
 tippers_dispatcher:

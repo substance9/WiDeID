@@ -44,6 +44,10 @@ public class RawConnectionEvent {
         this.apMac = apMac;
     }
 
+    public void setTimestamp(Timestamp timestamp){
+        this.timestamp = timestamp;
+    }
+
     public MacAddress getClientMac() {
         return clientMac;
     }

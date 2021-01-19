@@ -73,6 +73,10 @@ public class DeviceFilter implements DisposableBean, Runnable {
                 e.printStackTrace();
             }
 
+            if(evtStr.length() == 0){
+                continue;
+            }
+
             if (evtStr == null) {
                 logger.error("Empty Event String, skip");
                 continue;
