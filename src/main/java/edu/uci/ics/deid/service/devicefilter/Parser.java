@@ -62,10 +62,6 @@ public class Parser {
         // Iterate through all attribute pieces, each attribute is a string that represents key value pair connected by "="
         // keyValStr example:  SNMPv2-SMI::enterprises.14179.2.6.2.36.0 = INTEGER: 0
 
-        //ihe: for testing, remove it on the OIT side
-        Timestamp timestamp = Timestamp.valueOf(evtStr.substring(0,26));//read time
-        rawEvt.setTimestamp(timestamp);
-
         for (String keyValStr : evtStrArray){
             keyValStr = keyValStr.trim();
 
