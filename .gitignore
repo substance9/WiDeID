@@ -18,5 +18,6 @@ src/main/resources/web_service-dev.yml
 src/main/resources/web_service-prod.yml
 src/main/resources/dispatcher-dev.yml
 src/main/resources/dispatcher-prod.yml
+src/main/resources/occupancy-prod.yml
 .DS_Store
 *.code-workspace

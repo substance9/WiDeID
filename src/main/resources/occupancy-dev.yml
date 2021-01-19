@@ -2,9 +2,9 @@ spring:
   main:
     web-application-type: none
   datasource:
-    url: jdbc:postgresql://localhost:5432/deid
+    url: jdbc:postgresql://localhost:9001/deid
     username: postgres
-    password: postgres
+    password: privacyisimportant
     driver-class-name: org.postgresql.Driver
     hikari:
       connection-timeout: 60000
@@ -12,9 +12,9 @@ spring:
 
 occupancy:
   input_data:
-    deviceGraph: ./util/denseGraph.txt
-    cluterLabel: ./util/clusterMergeLabel.txt
-    WiFiAPs: ./util/wifiAPs.txt
+    deviceGraph: ./deid_occ_meta/denseGraph.txt
+    cluterLabel: ./deid_occ_meta/clusterMergeLabel.txt
+    WiFiAPs: ./deid_occ_meta/wifiAPs.txt
   parameter:
     interval: 0.1 #window size
     staticStart: 2 #2am
