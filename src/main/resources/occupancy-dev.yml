@@ -14,7 +14,9 @@ occupancy:
   input_data:
     deviceGraph: ./deid_occ_meta/denseGraph.txt
     cluterLabel: ./deid_occ_meta/clusterMergeLabel.txt
-    WiFiAPs: ./deid_occ_meta/wifiAPs.txt
+    spaceMetadata: ./deid_occ_meta/Full_Campus.csv
+    overlappingRegion: ./deid_occ_meta/intersection_data.csv
+    staticDevice: ./deid_occ_meta/staticDevices.txt
   parameter:
     interval: 5 #window size
     staticStart: 2 #2am
