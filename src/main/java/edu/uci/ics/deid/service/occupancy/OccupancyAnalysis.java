@@ -88,11 +88,12 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     Map<String, Integer> staticDevice = new HashMap<String, Integer>();//store only the static devices and its corresponding frequency
     List<Space> spaces = new ArrayList<>();
     Map<String, Integer> APID = new HashMap<String, Integer>();//(ap name, index of spaces array)
-    Map<Integer, Pair<Integer, Double>> overlappingRegion = new HashMap<Integer, Pair<Integer, Double>>();//store data from overlappingRegions. [coverage_id, Pair: (region_id, percentage)]
+    //using list because one coverage_id may correspond to multiple pair
+    Map<Integer, List<Pair<Integer, Double>>> overlappingRegion = new HashMap<Integer, List<Pair<Integer, Double>>>();//store data from overlappingRegions. [coverage_id, Pair: (region_id, percentage)]
     Map<Integer, Boolean> activeBuilding = new HashMap<Integer, Boolean>();//store those buildings which receive conectivity data
 
     private Timestamp lastWeekTimestamp;//use to update staticDevices weekly
-    private Timestamp lastDayTimestamp;//use to flush staticDevices to disk weekly
+    private Timestamp lastDayTimestamp;//use to flush staticDevices to disk daily
     private Timestamp lastTimestamp;
     private Timestamp currentTimestamp;
     private long timeElapsed;
@@ -113,10 +114,11 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         RawConnectionEvent evt = null;
         //lastTimestamp = new Timestamp(System.currentTimeMillis());//modify to first event for testing
         lastWeekTimestamp = new Timestamp(System.currentTimeMillis());
+        lastDayTimestamp = new Timestamp(System.currentTimeMillis());
         SO.readGraph(graphFile, clusterLabelFile);
         readSpaceMetadata();
         readOverlappingRegion();
-        //readStaticDevice();//ihe: test for running only first time
+        readStaticDevice();//ihe: test for running only first time
 
         while(this.running){
             //read event from queue
@@ -126,6 +128,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
                 filterStaticDevice(evt);
                 assignEvent(evt);
                 updateStaticDeviceWeekly(evt);
+                staticDevicesToDisk(evt);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -265,16 +268,29 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
             while ((line=br.readLine()) != null) {
                 String[] array = line.split(",");
                 List<String> str = Arrays.asList(array);
-                overlappingRegion.put(Integer.valueOf(str.get(1)), new Pair(Integer.valueOf(str.get(0)), Double.valueOf(str.get(2))));
+                Double area = Double.valueOf(str.get(2));
+                int region_id = Integer.valueOf(str.get(0));
+                int coverage_id = Integer.valueOf(str.get(1));
+                if(area == 0.0) {
+                    continue;
+                }
+                if(overlappingRegion.containsKey(coverage_id)){
+                    overlappingRegion.get(coverage_id).add(new Pair(region_id, area));
+                }else{
+                    //one coverage id can correspond to multiple region id
+                    List<Pair<Integer, Double>> regions = new ArrayList<>();
+                    regions.add(new Pair(region_id, area));
+                    overlappingRegion.put(coverage_id, regions);
+                }         
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         /*for(Map.Entry<Integer, Pair<Integer, Double>> entry : overlappingRegion.entrySet()){
             System.out.print(entry.getKey() + " " + entry.getValue().getKey() + " " + entry.getValue().getValue());
             System.out.println("");
         }*/
+
     }
 
     public void assignEvent(RawConnectionEvent evt){
@@ -442,13 +458,13 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         occupancyOutput.setOccupancyArray(occus);
         sendQueue.put(occupancyOutput);
 
-        //System.out.println(occupancyOutput.getOccupancyArray().size());
+        System.out.println(occupancyOutput.getOccupancyArray().size());
 
-        /*logger.debug("Try to send a occupancy output");
+        logger.debug("Try to send a occupancy output");
         System.out.println(occupancyOutput.getStartTimeStamp() + " " + occupancyOutput.getEndTimeStamp());
         for(int i=0;i<occupancyOutput.getOccupancyArray().size();i++){
             logger.debug("ap_id: " + occupancyOutput.getOccupancyArray().get(i).getApid() + " Count: " + occupancyOutput.getOccupancyArray().get(i).getCount());
-        }*/
+        }
     }
 
     public void MergeFatherNode(int spaceIndex, List<Integer> slimArray){//merge slim array of current node with#spaceIndex to its father
@@ -469,20 +485,21 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     }
 
     public void MergeSemanticNode(int spaceIndex, List<Integer> slimArray){
-        int space_id = spaces.get(spaceIndex).getSpace_id();
+        int space_id = spaces.get(spaceIndex).getSpace_id();//space id is coverage id now
         if(overlappingRegion.containsKey(space_id)){
-            int region_id = overlappingRegion.get(space_id).getKey();
-            double overlapping_area = overlappingRegion.get(space_id).getValue();
-            String region_name = String.valueOf(region_id);
-            int region_index = spaceIDIndex.get(region_id);
-            double area = spaces.get(region_index).getArea();
-            //System.out.println("region_id: " + region_id + " region area: "  + area + " physical region id: " + space_id + " overlapping area: " + overlapping_area);
-            if((overlapping_area/area)>=0.5){
-                if(!apEvents.containsKey(region_name)){
-                    apEvents.put(region_name, slimArray);
-                }
-                else{
-                    apEvents.get(region_name).addAll(slimArray);
+            //for all semantic regions which overlap with this physical region
+            for(int i=0;i<overlappingRegion.get(space_id).size();i++){
+                int region_id = overlappingRegion.get(space_id).get(i).getKey();
+                double overlapping_area = overlappingRegion.get(space_id).get(i).getValue();
+                String region_name = String.valueOf(region_id);
+                double physical_area = spaces.get(spaceIndex).getArea();//should be the area of wifi physical region instead of semantic region
+                if((overlapping_area/physical_area)>=0.5){
+                    if(!apEvents.containsKey(region_name)){
+                        apEvents.put(region_name, slimArray);
+                    }
+                    else{
+                        apEvents.get(region_name).addAll(slimArray);
+                    }
                 }
             }
         }
