@@ -12,6 +12,7 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
@@ -24,7 +25,10 @@ import edu.uci.ics.deid.util.AES;
 public class OccupancyDispatcher implements DisposableBean, Runnable {
 
     private Thread thread;
-    private volatile boolean running; 
+    private volatile boolean running;
+
+    @Value("${tippers_dispatcher.host}")
+    private String host;
 
     @Value("${tippers_dispatcher.secret}")
     private String secret;
@@ -84,6 +88,7 @@ public class OccupancyDispatcher implements DisposableBean, Runnable {
                 e1.printStackTrace();
             }
             encMsg.setBody(encBodyStr);
+            encMsg.setType("oc");
 
             try {
                 msg = mapper.writeValueAsString(encMsg);
@@ -113,8 +118,8 @@ public class OccupancyDispatcher implements DisposableBean, Runnable {
     @PostConstruct
     private  void init(){
         context = new ZContext();
-        publisher = context.createSocket(ZMQ.PUB);
-        publisher.bind("tcp://*:"+Integer.toString(port));
+        publisher = context.createSocket(SocketType.PUB);
+        publisher.connect("tcp://"+host+":"+Integer.toString(port));
         this.running = true;
         this.thread.start();
     }

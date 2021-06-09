@@ -1,5 +1,6 @@
 package edu.uci.ics.deid.service.devicefilter;
 
+import org.apache.commons.io.input.Tailer;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,15 +15,13 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.PostConstruct;
 
 @Component
-public class StreamReceiver implements DisposableBean, Runnable {
+public class StreamReceiver implements DisposableBean {
     @Value("${device_filter.stream_receiver.in_pipe_path}")
     private String inPipeFileName;
 
     private Thread thread;
     private volatile boolean running;
-    private static InputStream pipeIn;
-    private static InputStreamReader streamReader;
-    private static BufferedReader bufferReader;
+    private LogTailerListener logListener;
 
     @Autowired
     StreamLineRecvQueue recvQueue;
@@ -30,38 +29,7 @@ public class StreamReceiver implements DisposableBean, Runnable {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public StreamReceiver(){
-        this.thread = new Thread(this);
-    }
 
-    private void createPipeReader(String pipeNameStr) throws Exception{
-        File pipeInFile = new File(pipeNameStr);
-        pipeIn = new FileInputStream(pipeInFile);
-        streamReader = new InputStreamReader(pipeIn);
-        bufferReader = new BufferedReader(streamReader);
-    }
-
-    @Override
-    public void run() {
-        String pipeName = inPipeFileName;
-        do {
-            try {
-                TimeUnit.SECONDS.sleep(1);
-                createPipeReader(pipeName);
-            } catch (Exception e) {
-                logger.error("Cannot Open Data Source Pipe File");
-                this.running = false;
-            }
-        } while (!this.running);
-
-        while (this.running) {
-            try {
-                String line = bufferReader.readLine();
-                //logger.debug("Data Receiver Get Data: " + line);
-                recvQueue.put(line);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     @Override
@@ -70,9 +38,18 @@ public class StreamReceiver implements DisposableBean, Runnable {
     }
 
     @PostConstruct
-    private  void init(){
-        this.running = true;
+    private  void postConstruct(){
+        logListener = new LogTailerListener(recvQueue);
+        try {
+            File pipeInFile = new File(inPipeFileName);
+            Tailer tailer = Tailer.create(pipeInFile, logListener, 300, true, true);
+            this.thread = new Thread(tailer);
+        } catch (Exception e) {
+            logger.error("Cannot Open Data Source Pipe File");
+            this.running = false;
+        }
 
+        this.running = true;
         this.thread.start();
 
     }

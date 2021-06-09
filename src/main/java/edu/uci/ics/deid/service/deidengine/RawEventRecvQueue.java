@@ -17,7 +17,7 @@ public class RawEventRecvQueue {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public RawEventRecvQueue() {
-        rQueue = new ArrayBlockingQueue<>(1024);
+        rQueue = new ArrayBlockingQueue<>(2048);
     }
 
     public void put(RawConnectionEvent evt) {

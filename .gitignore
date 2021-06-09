@@ -21,3 +21,8 @@ src/main/resources/dispatcher-prod.yml
 src/main/resources/occupancy-prod.yml
 .DS_Store
 *.code-workspace
+.idea/
+deid_occ_meta/
+*.log
+*.zip
+

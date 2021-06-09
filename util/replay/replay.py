@@ -2,17 +2,18 @@ import os
 import time
 
 HISTORY_DATA_DIR = './history_data/'
-HISTORY_DATA_FILE = "DBH_AP_SNMP.2018-06-11"
+HISTORY_DATA_FILE = "snmptrapd.log"
 
-DESTINATION_PIPE_LOCATION = "../pipe2"
+DESTINATION_PIPE_LOCATION = "./history_data/test.log"
 
-EVENT_INTERVAL_SEC = 0.1 #adjust the number of events per second, 0.01 -> 100 events per second
+EVENT_INTERVAL_SEC = 0.5 #adjust the number of events per second, 0.01 -> 100 events per second
 
 def replay(origin_data_file_d, destination_file_d):
     for line in origin_data_file_d:
         if len(line) > 2:
-            line_sec = line.split("|")
-            replay_line = line_sec[-1].strip()
+#             line_sec = line.split("|")
+#             replay_line = line_sec[-1].strip()
+            replay_line = line
             destination_file_d.write(replay_line)
             print("---Sending Event: " + replay_line)
             destination_file_d.write('\n')

@@ -1,14 +1,6 @@
 spring:
   main:
     web-application-type: none
-  datasource:
-    url: jdbc:postgresql://localhost:9001/deid
-    username: postgres
-    password: privacyisimportant
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      connection-timeout: 60000
-      maximum-pool-size: 20
 
 occupancy:
   input_data:
@@ -26,6 +18,7 @@ occupancy:
     staticDeviceThreshold: 20
 
 tippers_dispatcher:
-  secret: occupancyisimportant
-  port: 6666
+  host: wideid.ics.uci.edu
+  secret: 73ycn3hHUIB84jd6b
+  port: 38775
 

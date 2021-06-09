@@ -63,11 +63,15 @@ public class DeidEngine implements DisposableBean, Runnable {
 
             numMsgReceived++;
 
-            // logger.debug(String.format("DeIDEngine Get Event, AP MAC: %s, AP ID: %s, Client MAC: %s, Time: %d", 
-            //                             rawEvt.getApMac().getMacAddrStr(),
-            //                             rawEvt.getApId(),
-            //                             rawEvt.getClientMac().getMacAddrStr(),
-            //                             rawEvt.getTimestamp().getTime()));
+            if (numMsgReceived % 100 == 0){
+                logger.info(String.valueOf(numMsgReceived) + " Events processed");
+            }
+
+            logger.debug(String.format("DeIDEngine Get Event, AP MAC: %s, AP ID: %s, Client MAC: %s, Time: %d",
+                                         rawEvt.getApMac().getMacAddrStr(),
+                                         rawEvt.getApId(),
+                                         rawEvt.getClientMac().getMacAddrStr(),
+                                         rawEvt.getTimestamp().getTime()));
 
             MacAddress devMac = rawEvt.getClientMac();
             salt = saltManager.getSalt(rawEvt);

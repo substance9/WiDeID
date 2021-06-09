@@ -3,6 +3,15 @@ package edu.uci.ics.deid.model;
 public class EncryptedDispatchingMsg {
     private String header;
     private String body;
+    private String type;
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 
     public EncryptedDispatchingMsg(){
     }

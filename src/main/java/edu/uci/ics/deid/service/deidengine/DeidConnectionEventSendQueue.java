@@ -18,7 +18,7 @@ public class DeidConnectionEventSendQueue {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public DeidConnectionEventSendQueue() {
-        sQueue = new ArrayBlockingQueue<>(1024);
+        sQueue = new ArrayBlockingQueue<>(2048);
     }
 
     public void put(DeidConnectionEvent evt) {

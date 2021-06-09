@@ -15,7 +15,7 @@ public class StreamLineRecvQueue {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public StreamLineRecvQueue() {
-        rQueue = new ArrayBlockingQueue<>(1024);
+        rQueue = new ArrayBlockingQueue<>(2048);
     }
 
     public void put(String evtStr) {

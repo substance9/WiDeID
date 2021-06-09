@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import edu.uci.ics.deid.model.DeviceFilterLog;
 import edu.uci.ics.deid.model.RawConnectionEvent;
-import edu.uci.ics.deid.service.devicefilter.filter.OptoutDeviceFilter;
+//import edu.uci.ics.deid.service.devicefilter.filter.OptoutDeviceFilter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,17 +36,17 @@ public class DeviceFilter implements DisposableBean, Runnable {
     @Autowired 
     RawEventSendQueue sendQueue;
 
-    @Autowired
-    DeviceFilterLogQueue logQueue;
+//    @Autowired
+//    DeviceFilterLogQueue logQueue;
 
     @Autowired
     Parser parser;
 
-    @Autowired
-    OptoutDeviceFilter optOutDevFilter;
+//    @Autowired
+//    OptoutDeviceFilter optOutDevFilter;
 
-    @Autowired
-    DeviceFilterLogger deviceFilterLogger;
+//    @Autowired
+//    DeviceFilterLogger deviceFilterLogger;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -57,10 +57,9 @@ public class DeviceFilter implements DisposableBean, Runnable {
 
     @Override
     public void run() {
-        ExecutorService optOutFilterExecutor = Executors.newSingleThreadExecutor();
         String evtStr = null;
         RawConnectionEvent rawEvt = null;
-        DeviceFilterLog filterLog = null;
+//        DeviceFilterLog filterLog = null;
         //ExecutorService regDevFilterExecutor = Executors.newSingleThreadExecutor();
         // Main Loop
         while (this.running) {
@@ -100,40 +99,12 @@ public class DeviceFilter implements DisposableBean, Runnable {
             //For occupancy experiment, no opt-out is needed
             sendQueue.put(rawEvt);
             numMsgForwarded++;
+            if (numMsgForwarded % 100 == 0){
+                logger.info(String.valueOf(numMsgForwarded) + " Events read and forwarded");
+            }
 
             //3. Check Filter Policies
-            // optOutDevFilter.setEventForChecking(rawEvt);
-            // Future<Boolean> result1 = optOutFilterExecutor.submit(optOutDevFilter);
-
-            // boolean forwardingDecision1 = false;
-            // try{
-            //     forwardingDecision1 = result1.get();
-            // }catch (InterruptedException|ExecutionException e) {
-            //     logger.error("Error when try to get result from opt-out filter");
-            //     e.printStackTrace();
-            // }
-
-            // boolean discardFlag = false;
-            // String discardReasons = "";
-
-            // if (forwardingDecision1 == false){
-            //     discardFlag = true;
-            //     discardReasons += optOutDevFilter.getFilterReason();
-            // }
-
-            // if(discardFlag == false){
-            //     sendQueue.put(rawEvt);
-            //     numMsgForwarded++;
-            // }
-            // else{
-            //     //Discard the data and generate the log for attestation in the future
-            //     filterLog = new DeviceFilterLog(rawEvt, discardReasons);
-            //     logQueue.put(filterLog);
-            //     logger.debug("Device " + rawEvt.getClientMac().getMacAddrStr() + " is opted-out device, Discard data.");
-            //     numMsgDiscarded++;
-            //     continue;
-            // }
-            
+            // removed for bsu branch
         }
     }
 

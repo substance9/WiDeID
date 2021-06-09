@@ -18,7 +18,7 @@ public class OccupancySendQueue {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public OccupancySendQueue() {
-        sQueue = new ArrayBlockingQueue<>(1024);
+        sQueue = new ArrayBlockingQueue<>(2048);
     }
 
     public void put(Occupancy evt) {

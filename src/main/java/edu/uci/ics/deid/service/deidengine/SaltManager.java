@@ -14,8 +14,8 @@ import edu.uci.ics.deid.cache.LRUCache;
 import edu.uci.ics.deid.model.MacAddress;
 import edu.uci.ics.deid.model.RawConnectionEvent;
 import edu.uci.ics.deid.model.entity.CurrentSalt;
-import edu.uci.ics.deid.repository.CurrentSaltRepository;
-import edu.uci.ics.deid.repository.HistoricalSaltRepository;
+//import edu.uci.ics.deid.repository.CurrentSaltRepository;
+//import edu.uci.ics.deid.repository.HistoricalSaltRepository;
 
 @Component
 public class SaltManager {
@@ -25,12 +25,13 @@ public class SaltManager {
 
     @Value("${deid_engine.salt_manager.cache_size}")
     private Integer cacheSize;
-    
-    @Autowired
-    CurrentSaltRepository currentSaltRepo;
 
-    @Autowired
-    HistoricalSaltRepository historicalSaltRepo;
+    //removed for BSU branch
+//    @Autowired
+//    CurrentSaltRepository currentSaltRepo;
+//
+//    @Autowired
+//    HistoricalSaltRepository historicalSaltRepo;
 
     @Autowired
     HashOperator hashOperator;
@@ -74,9 +75,9 @@ public class SaltManager {
                 // The salt is expired
                 // 1. Generate new Salt, 2. Update in DB 3. Update in cache
                 newSaltEntity = generateNewSaltForMac(devMac, now);
-                currentSaltRepo.updateCurrentSalt(newSaltEntity);
-                historicalSaltRepo.updateHistoricalSalt(saltCacheItem.currentSalt, devMac, now);
-                historicalSaltRepo.insertNewHistoricalSaltEntryFromCurrentSalt(newSaltEntity);
+//                currentSaltRepo.updateCurrentSalt(newSaltEntity);
+//                historicalSaltRepo.updateHistoricalSalt(saltCacheItem.currentSalt, devMac, now);
+//                historicalSaltRepo.insertNewHistoricalSaltEntryFromCurrentSalt(newSaltEntity);
                 updateSaltCache(devMac, newSaltEntity.getSalt(), now);
 
                 retSalt = newSaltEntity.getSalt();
@@ -84,38 +85,41 @@ public class SaltManager {
         } else {
             // Cache Missing
 
-            CurrentSalt currentSaltFromDB = currentSaltRepo.getByMac(devMac);
-            if (currentSaltFromDB == null) {
+//            CurrentSalt currentSaltFromDB = currentSaltRepo.getByMac(devMac);
+            // Hack for the BSU deployment, removed DB requirement
+//            CurrentSalt currentSaltFromDB = null;
+//            if (currentSaltFromDB == null) {
                 // There is also NO salt information in DB for the device
                 // This is the first time the system sees the device
                 // Generate salt for the device
                 newSaltEntity = generateNewSaltForMac(devMac, now);
-                currentSaltRepo.insertNewCurrentSaltEntry(newSaltEntity);
-                historicalSaltRepo.insertNewHistoricalSaltEntryFromCurrentSalt(newSaltEntity);
+                //Modification for the BSU deployment, not inserting to db
+                //currentSaltRepo.insertNewCurrentSaltEntry(newSaltEntity);
+                //historicalSaltRepo.insertNewHistoricalSaltEntryFromCurrentSalt(newSaltEntity);
                 updateSaltCache(devMac, newSaltEntity.getSalt(), now);
 
                 retSalt = newSaltEntity.getSalt();
 
-            } else {
-                // There is salt information in DB
-                // Check if the salt information is expired
-                if (!isExpired(currentSaltFromDB.getLastChangeTime(), now)) {
-                    // Not Expired: Set in the cache and return
-                    byte[] newSalt = hashOperator.getNewRandomSalt();
-                    updateSaltCache(devMac, newSalt, now);
-                    retSalt = newSalt;
-                } else {
-                    // Expired:
-                    // 1. Generate new Salt, 2. Update in DB 3. Update in cache
-                    newSaltEntity = generateNewSaltForMac(devMac, now);
-                    currentSaltRepo.updateCurrentSalt(newSaltEntity);
-                    historicalSaltRepo.updateHistoricalSalt(currentSaltFromDB.getSalt(), devMac, now);
-                    historicalSaltRepo.insertNewHistoricalSaltEntryFromCurrentSalt(newSaltEntity);
-                    updateSaltCache(devMac, newSaltEntity.getSalt(), now);
-
-                    retSalt = newSaltEntity.getSalt();
-                }
-            }
+//            } else {
+//                // There is salt information in DB
+//                // Check if the salt information is expired
+//                if (!isExpired(currentSaltFromDB.getLastChangeTime(), now)) {
+//                    // Not Expired: Set in the cache and return
+//                    byte[] newSalt = hashOperator.getNewRandomSalt();
+//                    updateSaltCache(devMac, newSalt, now);
+//                    retSalt = newSalt;
+//                } else {
+//                    // Expired:
+//                    // 1. Generate new Salt, 2. Update in DB 3. Update in cache
+//                    newSaltEntity = generateNewSaltForMac(devMac, now);
+//                    currentSaltRepo.updateCurrentSalt(newSaltEntity);
+//                    historicalSaltRepo.updateHistoricalSalt(currentSaltFromDB.getSalt(), devMac, now);
+//                    historicalSaltRepo.insertNewHistoricalSaltEntryFromCurrentSalt(newSaltEntity);
+//                    updateSaltCache(devMac, newSaltEntity.getSalt(), now);
+//
+//                    retSalt = newSaltEntity.getSalt();
+//                }
+//            }
         }
 
         return retSalt;

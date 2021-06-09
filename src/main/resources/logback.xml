@@ -48,17 +48,17 @@
         <appender-ref ref="ASYNC" />
     </logger>
     <logger name="edu.uci.ics.deid.service.devicefilter" >
-        <level value="DEBUG"/>
+        <level value="INFO"/>
         <appender-ref ref="ASYNC" />
         <appender-ref ref="STDOUT" />
     </logger>
     <logger name="edu.uci.ics.deid.service.deidengine" >
-        <level value="DEBUG"/>
+        <level value="INFO"/>
         <appender-ref ref="STDOUT" />
         <appender-ref ref="ASYNC" />
     </logger>
     <logger name="edu.uci.ics.deid.controller" >
-        <level value="DEBUG"/>
+        <level value="INFO"/>
         <appender-ref ref="STDOUT" />
         <appender-ref ref="ASYNC" />
     </logger>

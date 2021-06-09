@@ -17,7 +17,7 @@ public class DeidConnectionEventRecvQueue {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public DeidConnectionEventRecvQueue() {
-        rQueue = new ArrayBlockingQueue<>(1024);
+        rQueue = new ArrayBlockingQueue<>(2048);
     }
 
     public void put(DeidConnectionEvent evt) {
