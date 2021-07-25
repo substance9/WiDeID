@@ -24,6 +24,10 @@ occupancy:
     updateInterval: 7 #the interval to update staticDevices 
     staticFlushToDeviceInterval: 1
     staticDeviceThreshold: 20
+    logStartTime: "2021-07-27 10:00:00"
+    logEndTime: "2021-07-27 12:00:00"
+  output_data:
+    logRawData: ./deid_occ_meta/logRawData.txt
 
 tippers_dispatcher:
   secret: occupancyisimportant

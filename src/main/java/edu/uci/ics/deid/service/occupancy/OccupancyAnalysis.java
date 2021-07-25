@@ -1,6 +1,8 @@
 package edu.uci.ics.deid.service.occupancy;
 
 import java.io.IOException;
+import java.io.FileWriter;
+import java.sql.Time;
 import java.sql.Timestamp;
 import javax.annotation.PostConstruct;
 import java.lang.Math; 
@@ -73,6 +75,15 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     @Value("${occupancy.parameter.updateInterval}")
     private long updateInterval;
 
+    @Value("${occupancy.parameter.logStartTime}")
+    private String logStartTime;
+
+    @Value("${occupancy.parameter.logEndTime}")
+    private String logEndTime;
+
+    @Value("${occupancy.output_data.logRawData}")
+    private String logRawData;
+
     @Autowired
     RawEventRecvQueue recvQueue;
 
@@ -92,6 +103,11 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
     Map<Integer, List<Pair<Integer, Double>>> overlappingRegion = new HashMap<Integer, List<Pair<Integer, Double>>>();//store data from overlappingRegions. [coverage_id, Pair: (region_id, percentage)]
     Map<Integer, Boolean> activeBuilding = new HashMap<Integer, Boolean>();//store those buildings which receive conectivity data
 
+    private BufferedWriter bw;
+
+    private Timestamp logStartTimeStamp = Timestamp.valueOf(logStartTime);
+    private Timestamp logEndTimeStamp = Timestamp.valueOf(logEndTime);
+    
     private Timestamp lastWeekTimestamp;//use to update staticDevices weekly
     private Timestamp lastDayTimestamp;//use to flush staticDevices to disk daily
     private Timestamp lastTimestamp;
@@ -119,6 +135,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         readSpaceMetadata();
         readOverlappingRegion();
         readStaticDevice();//ihe: test for running only first time
+        openFile(logRawData);
 
         while(this.running){
             //read event from queue
@@ -133,6 +150,8 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
                 e.printStackTrace();
             }
         }
+
+        close();
     }
 
     public void filterStaticDevice(RawConnectionEvent evt){
@@ -251,11 +270,15 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
             e.printStackTrace();
         }
 
-        /*System.out.println(spaces.size());
+        
 
+        //System.out.println(spaces.size());
+        /*System.out.println("************************************");
         for(int i=0;i<spaces.size();i++){
-            System.out.print(spaces.get(i).getSpace_id() + " " + spaces.get(i).getName() + " " + spaces.get(i).getSpace_type() + " " + spaces.get(i).getBuilding_id() + " " + spaces.get(i).getFloor_id() + " " + spaces.get(i).getArea());
-            System.out.println("");
+            if(spaces.get(i).getSpace_id() == 1629){
+                System.out.println("************************************");
+                System.out.println(spaces.get(i).getName());
+            }
         }*/
     }
 
@@ -286,14 +309,11 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        /*for(Map.Entry<Integer, Pair<Integer, Double>> entry : overlappingRegion.entrySet()){
-            System.out.print(entry.getKey() + " " + entry.getValue().getKey() + " " + entry.getValue().getValue());
-            System.out.println("");
-        }*/
 
     }
 
     public void assignEvent(RawConnectionEvent evt){
+        
         //for testing 
         if(!flag){
             lastTimestamp = evt.getTimestamp();
@@ -302,6 +322,12 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
 
         String ap = evt.getApId();
         String clientMac = evt.getClientMac().getInitHashId();
+
+        //add for logging
+        if(evt.getTimestamp().compareTo(logStartTimeStamp) > 0 && evt.getTimestamp().compareTo(logEndTimeStamp) < 0){
+            write(evt.getApId() + " " + evt.getApMac() + " " + evt.getClientMac() + " " + evt.getTimestamp().toLocalDateTime().toString() + " " + evt.getType());
+        }
+        //end for logging
 
         //udpate active buildings
         if(APID.containsKey(ap)){//target ap
@@ -328,7 +354,7 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
 
         currentTimestamp = evt.getTimestamp();
         timeElapsed = currentTimestamp.getTime() - lastTimestamp.getTime();//milliseconds = 0.001 second
-        
+        System.out.println(lastTimestamp.toLocalDateTime() + " " + currentTimestamp.toLocalDateTime());
         if(timeElapsed > interval*60*1000){
             computeOccupancy();
             //System.out.println("before clear Memory usage: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()));
@@ -458,6 +484,8 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
         occupancyOutput.setOccupancyArray(occus);
         sendQueue.put(occupancyOutput);
 
+        System.out.println("start******");
+
         System.out.println(occupancyOutput.getOccupancyArray().size());
 
         logger.debug("Try to send a occupancy output");
@@ -502,6 +530,33 @@ public class OccupancyAnalysis implements DisposableBean, Runnable {
                     }
                 }
             }
+        }
+    }
+
+    public void openFile(String fileName){
+        try {
+            FileWriter out = new FileWriter(fileName);
+            bw = new BufferedWriter(out);
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void write(String log){
+        try{
+            bw.write(log);
+            bw.newLine();
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void close(){
+        try{
+            bw.flush();
+            bw.close();
+        }catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
